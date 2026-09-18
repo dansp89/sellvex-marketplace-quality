@@ -1,0 +1,30 @@
+# Capacity model of 08-INFRAESTRUTURA §Capacity model. Every value is null
+# until measured on the target hardware; a number typed here without a
+# report in reports/ is exactly what 08 §Gate de capacidade forbids.
+targets_from_06:
+  registered_stores: 120000          # 00 §Escopo, meta inicial
+  rps_initial_range: [1000, 10000]   # 06 §7
+  orders_per_day_max: 1000000        # 06 §7
+  peak_orders_per_second: 1000       # 06 §7 (coherence with rps: DEC-PERF-003)
+  products_per_store_mean: 1000      # 06 §7
+  products_per_store_max: 100000     # 06 §7
+  media_volume_tb: [10, 100]         # 06 §7
+measured:
+  registered_stores: null
+  active_stores_daily: null
+  hot_stores: null
+  products_per_store_p50_p95_p99: [null, null, null]
+  orders_per_day: null
+  peak_orders_per_second: null
+  read_requests_per_second: null
+  write_requests_per_second: null
+  read_write_ratio: null
+  payload_size_p50_p95_p99: [null, null, null]
+  media_upload_bandwidth: null
+  webhook_rate: null
+  background_job_rate: null
+  growth_rate: null
+capacity_unit:
+  definition: null   # DEC-CP-001 / DEC-INFRA-001: derived from the node benchmark
+  per_node: null
+reports: []          # one entry per execution, pointing into reports/
