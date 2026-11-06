@@ -12,4 +12,6 @@ Regra que governa tudo aqui (`08 §Gate de capacidade`): **"Não declare suporte
 | `chaos/` | Injeção de falha: banco, broker, cache, réplica, célula (`04 §Caos`) |
 | `reports/` | Relatórios assinados e versionados, um por execução |
 
+Nenhum cenário ou resultado é fabricado, em nenhuma dessas pastas: cada item entra com o registro exigido por `08 §Registro de cada teste`. As pastas estão vazias porque ainda não houve medição — um `.gitkeep` as mantém versionadas.
+
 Os orçamentos de latência (`DEC-PERF-001`) e o perfil de tráfego (`DEC-PERF-003`) ficam `proposed` até o primeiro baseline reproduzível sair daqui.
