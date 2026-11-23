@@ -19,11 +19,11 @@ test("navegar, comprar com Pix e ver o pedido", async ({ page }, info) => {
     await page.goto("/sign-in")
     await expect(page.getByRole("heading", { name: "Entrar" })).toBeVisible()
     await expect(page.getByText(/Entrar com Google/)).toHaveCount(0)
-    await page.getByLabel("E-mail").fill(buyer.email)
-    await page.getByLabel("Senha").fill("senha-errada")
+    await page.locator("main").getByRole("textbox", { name: /^E-mail/ }).fill(buyer.email)
+    await page.locator("main").getByRole("textbox", { name: /^Senha/ }).fill("senha-errada")
     await page.getByRole("button", { name: "Entrar", exact: true }).click()
     await expect(page.getByText("E-mail ou senha incorretos.")).toBeVisible()
-    await page.getByLabel("Senha").fill(buyer.password)
+    await page.locator("main").getByRole("textbox", { name: /^Senha/ }).fill(buyer.password)
     await page.getByRole("button", { name: "Entrar", exact: true }).click()
     await expect(page).toHaveURL(/\/account/)
     await expect(page.getByText(`Olá, ${buyer.name}`)).toBeVisible()
@@ -49,7 +49,7 @@ test("navegar, comprar com Pix e ver o pedido", async ({ page }, info) => {
   })
 
   await test.step("checkout com pagamento manual", async () => {
-    await expect(page.getByLabel("E-mail")).toHaveValue(buyer.email)
+    await expect(page.locator("main").getByRole("textbox", { name: /^E-mail/ })).toHaveValue(buyer.email)
     await page.getByLabel("Nome completo").fill(buyer.name)
     await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25")
     await page.getByRole("button", { name: "Continuar" }).click()
