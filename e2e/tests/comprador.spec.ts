@@ -64,9 +64,9 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
   await test.step("cadastro com consentimento de ofertas", async () => {
     await page.goto("/sign-up")
     await expect(page.getByRole("heading", { name: "Criar conta" })).toBeVisible()
-    await page.getByLabel("Nome completo").fill(person.name)
-    await page.getByLabel("E-mail").fill(person.email)
-    await page.getByLabel("Senha").fill(person.password)
+    await page.locator("main").getByLabel("Nome completo").fill(person.name)
+    await page.locator("main").getByRole("textbox", { name: /^E-mail/ }).fill(person.email)
+    await page.locator("main").getByRole("textbox", { name: /^Senha/ }).fill(person.password)
     await page.getByTestId("sign-up-terms").click()
     await expect(page.getByTestId("sign-up-marketing")).toBeVisible()
     await page.getByTestId("sign-up-marketing").click()
@@ -78,10 +78,13 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
 
   await test.step("o mesmo e-mail não cria outra conta", async () => {
     await page.getByRole("button", { name: "Sair" }).first().click()
+    await expect(page).toHaveURL(/\/$/)
+    /* Com a mesma senha o core trata como repetição e responde 201 com a
+       mesma conta; com outra senha recusa com identity.signup_login_exists. */
     await page.goto("/sign-up")
-    await page.getByLabel("Nome completo").fill(person.name)
-    await page.getByLabel("E-mail").fill(person.email)
-    await page.getByLabel("Senha").fill(person.password)
+    await page.locator("main").getByLabel("Nome completo").fill(person.name)
+    await page.locator("main").getByRole("textbox", { name: /^E-mail/ }).fill(person.email)
+    await page.locator("main").getByRole("textbox", { name: /^Senha/ }).fill(`outra-${person.password}`)
     await page.getByTestId("sign-up-terms").click()
     await page.getByRole("button", { name: "Criar conta" }).click()
     await expect(page.getByTestId("sign-up-error")).toContainText("Já existe uma conta")
@@ -89,8 +92,8 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
 
   await test.step("entrar com a senha", async () => {
     await page.goto("/sign-in")
-    await page.getByLabel("E-mail").fill(person.email)
-    await page.getByLabel("Senha").fill(person.password)
+    await page.locator("main").getByRole("textbox", { name: /^E-mail/ }).fill(person.email)
+    await page.locator("main").getByRole("textbox", { name: /^Senha/ }).fill(person.password)
     await page.getByRole("button", { name: "Entrar", exact: true }).click()
     await expect(page).toHaveURL(/\/account/)
     await page.goto("/account/profile")
@@ -100,7 +103,7 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
 
   await test.step("telefone pela edição dos dados", async () => {
     await page.goto("/account/profile/edit")
-    await page.getByLabel("Telefone").fill("(92) 99123-4567")
+    await page.locator("main").getByLabel("Telefone").fill("(92) 99123-4567")
     await page.getByRole("button", { name: "Salvar" }).click()
     await expect(page).toHaveURL(/\/account\/profile$/)
     await expect(page.getByTestId("my-profile")).toContainText("92991234567")
@@ -130,12 +133,12 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
     await page.getByRole("button", { name: "Finalizar compra" }).first().click()
     await expect(page).toHaveURL(/\/checkout/)
 
-    await expect(page.getByLabel("E-mail")).toHaveValue(person.email)
+    await expect(page.locator("main").getByRole("textbox", { name: /^E-mail/ })).toHaveValue(person.email)
     await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25")
     await page.getByRole("button", { name: "Continuar" }).click()
 
     /* O endereço padrão da conta já vem escolhido. */
-    await expect(page.getByText(/Rua Marcílio Dias, 250/).first()).toBeVisible()
+    await expect(page.getByText(/, 250 — .*Manaus\/AM · CEP 69005-010/).first()).toBeVisible()
     await page.getByRole("button", { name: "Continuar" }).click()
     await page.getByText("Pix", { exact: true }).first().click()
     await page.getByRole("button", { name: "Continuar" }).click()
@@ -215,7 +218,7 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
       await page.getByRole("button", { name: "Recarregar" }).click()
       await expect(page.getByTestId("delivery-code")).toBeVisible({ timeout: 3000 })
     }).toPass({ timeout: 60_000, intervals: [3000] })
-    await expect(page.getByTestId("delivery-code")).toContainText(/\b\d{4}\b/)
+    await expect(page.getByTestId("delivery-code")).toContainText(/entrega\d{4}Diga/)
     await expect(page.getByTestId("delivery-timeline")).toContainText("Entrega criada")
     await expect(page.getByTestId("order-history")).toContainText("Confirmado")
     await shot(page, "08-pedido-com-codigo")
