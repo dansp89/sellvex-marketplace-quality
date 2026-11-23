@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { join, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
 import { state } from "./state"
-import { approveCourier, payCourier } from "../scripts/prepare-entregas"
+import { approveCourier, payCourier, offlinePreviousRuns } from "../scripts/prepare-entregas"
 
 /* O entregador no app Sellvex Entregas, do cadastro ao repasse, com um
  * pedido de verdade:
@@ -37,6 +37,7 @@ const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
 const { seller } = state()
 const COMMERCE = process.env.E2E_COMMERCE || "http://localhost:8082"
 const TRANSACTION = process.env.E2E_TRANSACTION || "http://localhost:8083"
+const CONTROL = process.env.E2E_CONTROL_PLANE || "http://localhost:8080"
 const IDP = process.env.E2E_IDP || "http://localhost:9000"
 const S = `/v1/stores/${setup.store}`
 const F = `/v1/storefronts/${setup.store}`
@@ -113,11 +114,15 @@ async function placeLocalDeliveryOrder(sellerTok: string): Promise<Task> {
   return api<Task>("GET", `${TRANSACTION}${S}/delivery-tasks/${task.id}`, sellerTok)
 }
 
+/** O campo de texto de um componente: os campos mascarados levam o
+    data-testid no invólucro, não no <input>. */
+const field = (page: Page, id: string) => page.locator(`input[data-testid="${id}"], [data-testid="${id}"] input`).first()
+
 async function shot(page: Page, name: string) {
   await page.screenshot({ path: test.info().outputPath(`${name}.png`), fullPage: false })
 }
 
-test("entregador: online, oferta real, coleta por QR, entrega com código e extrato", async ({ page, context }) => {
+test("entregador: cadastro, upload da CNH, oferta real, coleta por QR, telefone só em rota, entrega, extrato e repasse", async ({ page, context }) => {
   test.setTimeout(180_000)
   const errors: string[] = []
   page.on("pageerror", (e) => errors.push(e.message))
@@ -125,24 +130,25 @@ test("entregador: online, oferta real, coleta por QR, entrega com código e extr
   await context.setGeolocation({ latitude: -22.4256, longitude: -45.4528 })
   const sellerTok = await token(seller.client, seller.secret)
 
+  offlinePreviousRuns()
   let courierId = ""
   await test.step("cadastro público pela tela", async () => {
     await page.goto("/")
     await expect(page).toHaveURL(/\/login/)
     await page.getByTestId("go-signup").click()
     await expect(page).toHaveURL(/\/signup$/)
-    await page.getByTestId("signup-name").fill(courier.name)
-    await page.getByTestId("signup-email").fill(courier.email)
-    await page.getByTestId("signup-phone").fill(courier.phone)
-    await page.getByTestId("signup-password").fill(courier.password)
+    await field(page, "signup-name").fill(courier.name)
+    await field(page, "signup-email").fill(courier.email)
+    await field(page, "signup-phone").fill(courier.phone)
+    await field(page, "signup-password").fill(courier.password)
     await expect(page.getByTestId("signup-submit")).toBeDisabled()
-    await page.getByTestId("signup-terms").click()
+    await page.getByTestId("signup-terms").locator("input").or(page.locator('input[data-testid="signup-terms"]')).first().check()
     await shot(page, "01-cadastro")
     await page.getByTestId("signup-submit").click()
     await expect(page).toHaveURL(/\/profile\/edit$/, { timeout: 20_000 })
-    await page.getByTestId("profile-name").fill(courier.name)
-    await page.getByTestId("profile-phone").fill(courier.phone)
-    await page.getByTestId("profile-cpf").fill(courier.cpf)
+    await field(page, "profile-name").fill(courier.name)
+    await field(page, "profile-phone").fill(courier.phone)
+    await field(page, "profile-cpf").fill(courier.cpf)
     await page.getByTestId("profile-save").click()
     await expect(page).toHaveURL(/\/profile$/)
     const tok = await token(courier.email, courier.password)
@@ -198,7 +204,9 @@ test("entregador: online, oferta real, coleta por QR, entrega com código e extr
     await page.getByTestId("offer-accept").click()
     await expect(page).toHaveURL(new RegExp(`/tasks/${task.id}$`))
     await expect(page.getByTestId("task-status")).toHaveText("Coletar na loja")
-    await expect(page.getByTestId("task-pickup")).toContainText(setup.pickup.line1)
+    /* O endereço que a loja tem agora (outro teste na mesma stack pode tê-lo trocado). */
+    const pickup = await api<{ line1: string }>("GET", `${CONTROL}/v1/stores/${setup.store}/pickup-address`, sellerTok)
+    await expect(page.getByTestId("task-pickup")).toContainText(pickup.line1)
     await expect(page.getByTestId("call-recipient"), "antes da coleta o telefone não aparece").toHaveCount(0)
     await shot(page, "4-tarefa-coleta")
   })

@@ -184,6 +184,12 @@ export async function payCourier(setup: { org: string; cdl: { email: string; pas
   }), [200, 201], "registrar repasse")
 }
 
+/** Tira da fila os entregadores de rodadas anteriores deste teste (o teste corre sozinho na stack; um
+    teste que falhou a meio deixa o seu online, e ele levaria a oferta). */
+export function offlinePreviousRuns(): void {
+  psql(`update couriers.couriers set online = false where online`)
+}
+
 export { token }
 
 if (import.meta.main) main().catch((e) => { console.error(`✗ ${(e as Error).message}`); process.exit(1) })
