@@ -2,6 +2,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import { readFileSync, existsSync } from "node:fs"
 import { join, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
+import { paidOrder, courierPending } from "./fixtures"
 
 /* Entrega local da CDL, de ponta a ponta entre o painel da plataforma, o
  * da CDL (app-admin) e o do lojista (app-seller):
@@ -13,7 +14,12 @@ import { fileURLToPath } from "node:url"
  *    local, marca pronto e baixa as etiquetas;
  * 4. a CDL vê a entrega no monitor de despacho e abre a cadeia de custódia.
  *
- * Pré-requisito: `bun run prepare-stack && bun run prepare-logistics`. */
+ * Pré-requisito: `bun run prepare-stack && bun run prepare-logistics`.
+ *
+ * Re-executável contra o mesmo banco: cada rodada cria o seu pedido pago,
+ * volta o entregador a pendente e usa regime e frota com nome novo. O
+ * pedido de .tmp/logistics.json servia uma rodada só (depois de despachado
+ * não há mais «Começar a preparar»). */
 
 const tmp = join(dirname(fileURLToPath(import.meta.url)), "..", ".tmp")
 const file = join(tmp, "logistics.json")
@@ -52,6 +58,12 @@ async function courierToken(): Promise<string> {
 }
 
 test.describe.configure({ mode: "serial" })
+
+let orderId = ""
+test.beforeAll(async () => {
+  orderId = await paidOrder(L.storeId, S.seller)
+  courierPending(L.courierId)
+})
 
 test("plataforma grava um regime de trabalho", async ({ page }) => {
   await signIn(page, ADMIN, L.operator.client, L.operator.secret)
@@ -123,7 +135,7 @@ test("lojista liga a entrega local, marca pronto e imprime a etiqueta", async ({
   await expect(page.getByText(/Entrega local salva/)).toBeVisible()
   await shot(page, "06-lojista-configurar")
 
-  await page.goto(`${SELLER}/orders/${L.orderId}`)
+  await page.goto(`${SELLER}/orders/${orderId}`)
   await page.getByRole("button", { name: "Começar a preparar" }).click()
   await expect(page.getByText("Pedido em preparação.")).toBeVisible()
 
@@ -146,7 +158,7 @@ test("lojista liga a entrega local, marca pronto e imprime a etiqueta", async ({
     await expect(page.getByRole("button", { name: "Reservar", exact: true })).toBeVisible({ timeout: 2000 })
   }).toPass({ timeout: 90_000, intervals: [5000] })
   await page.getByRole("button", { name: "Reservar", exact: true }).click()
-  await expect(page).toHaveURL(new RegExp(`/orders/${L.orderId}$`))
+  await expect(page).toHaveURL(new RegExp(`/orders/${orderId}$`))
 
   await page.getByRole("button", { name: "Marcar pronto para coleta" }).click()
   await expect(page.getByText(/Pronto para coleta/).first()).toBeVisible()

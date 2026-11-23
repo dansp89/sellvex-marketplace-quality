@@ -59,6 +59,8 @@ test.describe.configure({ mode: "serial" })
 
 test("cadastro → entrar → endereço → checkout reivindicado com frete → minhas compras com código", async ({ page }) => {
   const errors: string[] = []
+  let reviewTotal = 0
+  let itemsTotal = 0
   page.on("pageerror", (e) => errors.push(e.message))
 
   await test.step("cadastro com consentimento de ofertas", async () => {
@@ -149,10 +151,19 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
     await expect(prepared).toBeVisible({ timeout: 30_000 })
     await expect(prepared.getByText("Este pedido não ficou ligado à sua conta.")).toHaveCount(0)
     await expect(prepared.getByTestId("shipping-quote")).toContainText(/Entrega local|local/i)
+    /* A opção mais barata já vem escolhida e entra no total da loja. */
+    await expect(prepared.getByTestId("shipping-quote").getByRole("radio").first()).toBeChecked()
+    await expect(prepared.getByText("O frete escolhido entra no total desta loja.")).toBeVisible()
     await page.getByTestId("coupon-input").fill("NAOEXISTE")
     await page.getByRole("button", { name: "Aplicar" }).click()
     await expect(prepared).toContainText(/Cupom inválido|não dá desconto/)
     await shot(page, "05-revisao")
+    const cents = (t: string) => Number(t.replace(/[^\d,]/g, "").replace(",", "."))
+    const money = (t: string) => Math.round(cents(t) * 100)
+    reviewTotal = money(await prepared.getByTestId("store-total").innerText())
+    const freight = money(await prepared.getByTestId("shipping-quote").locator(".sx-shipping__price").first().innerText())
+    itemsTotal = reviewTotal - freight
+    expect(freight, "frete da entrega local").toBeGreaterThan(0)
     await page.getByRole("button", { name: "Confirmar pedido" }).click()
     await expect(page).toHaveURL(/\/thank-you/, { timeout: 30_000 })
     await expect(page.getByText(/Pedido reservado/).first()).toBeVisible()
@@ -165,6 +176,24 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
     return p?.stores.find((s) => s.orderId)?.orderId ?? ""
   })
   expect(marketplaceOrderId).toMatch(/^[0-9a-f-]{36}$/)
+
+  await test.step("o frete escolhido foi somado no total do checkout", async () => {
+    const co = await page.evaluate(() => {
+      const raw = localStorage.getItem("sx-last-purchase")
+      const p = raw ? JSON.parse(raw) as { stores: { storeId: string; checkoutId: string }[] } : null
+      return p?.stores.find((s) => s.checkoutId) ?? null
+    })
+    expect(co, "checkout guardado").toBeTruthy()
+    const r = await fetch(`${TRANSACTION}/v1/storefronts/${co!.storeId}/checkouts/${co!.checkoutId}`)
+    expect(r.status).toBe(200)
+    const body = (await r.json()) as { total_amount: number; shipping_included: boolean; shipping?: { amount: number; carrier: string } }
+    expect(body.shipping_included).toBe(true)
+    expect(body.shipping?.carrier).toBe("local")
+    expect(body.shipping!.amount).toBeGreaterThan(0)
+    /* O que a revisão mostrou é o mesmo total do servidor, já com o frete. */
+    expect(reviewTotal).toBe(body.total_amount)
+    expect(itemsTotal + body.shipping!.amount).toBe(body.total_amount)
+  })
 
   let orderId = ""
   await test.step("o pedido aparece em Minhas compras (da conta, não do aparelho)", async () => {

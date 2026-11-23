@@ -36,7 +36,7 @@ export default defineConfig({
     { name: "logistica", testMatch: /logistica(-relatorios)?\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
     /* Comprador com conta: cadastro, endereços, carrinho reivindicado, frete,
        minhas compras com o código de entrega (vitrine web). */
-    { name: "comprador", testMatch: /comprador\.spec\.ts/, use: { baseURL: store, viewport: { width: 1366, height: 900 } } },
+    { name: "comprador", testMatch: /(comprador|emails)\.spec\.ts/, use: { baseURL: store, viewport: { width: 1366, height: 900 } } },
     { name: "lojista", testMatch: /lojista\.spec\.ts/, dependencies: ["loja-web", "loja-celular"], use: { baseURL: seller, viewport: { width: 1366, height: 900 } } },
     /* O app do entregador (sabor entregas do app-mobile), em tela de celular. */
     { name: "entregas", testMatch: /entregas\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: entregas } },

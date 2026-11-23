@@ -2,6 +2,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import { readFileSync, existsSync } from "node:fs"
 import { join, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
+import { ensureOwed, owed } from "./fixtures"
 
 /* Relatórios, repasses e endereço de retirada (core 8c3976e), de ponta a
  * ponta entre o painel da CDL (app-admin) e o do lojista (app-seller):
@@ -117,8 +118,32 @@ test("CDL vê o menu pelas permissões e abre o relatório de entregas", async (
   await shot(page, "r05-corridas")
 })
 
+test("CDL não registra repasse acima do que a rede deve", async ({ page }) => {
+  /* O core recusa (422 payouts.payout_exceeds_owed) um pagamento que passe
+     do devido: corridas e períodos fechados menos o já pago. */
+  const due = owed(L.orgId, L.courierId)
+  const above = Math.max(due, 0) + 100_000
+  await signIn(page, ADMIN, L.cdl.client, L.cdl.secret)
+  await page.goto(`${ADMIN}/logistics/payouts/new`)
+  await expect(page.getByRole("heading", { name: "Registrar repasse" })).toBeVisible()
+  await choose(page, page.getByLabel("Entregador"), new RegExp(L.courier.name))
+  await page.getByLabel("Valor").fill((above / 100).toFixed(2).replace(".", ","))
+  await page.getByLabel("Referência").fill(`E2E-ACIMA-${stamp}`)
+  await page.getByRole("button", { name: "Registrar repasse" }).click()
+  await expect(page.getByTestId("payout-rejected")).toContainText("passa do que a rede deve")
+  await expect(page).toHaveURL(/\/logistics\/payouts\/new/)
+  await shot(page, "r06a-repasse-acima")
+
+  const tok = await token(L.cdl.client, L.cdl.secret)
+  const api = await fetch(`${TRANSACTION}/v1/organizations/${L.orgId}/courier-payouts?courier_id=${L.courierId}&limit=200`, { headers: { authorization: `Bearer ${tok}` } })
+  const list = (await api.json()) as { items: { reference: string }[] }
+  expect(list.items.some((p) => p.reference === `E2E-ACIMA-${stamp}`)).toBe(false)
+})
+
 test("CDL registra um repasse ao entregador", async ({ page }) => {
   const reference = `E2E-PIX-${stamp}`
+  /* Cada rodada paga R$ 123,45: o saldo devido tem de cobrir. */
+  ensureOwed(L.orgId, L.courierId, 12345)
   await signIn(page, ADMIN, L.cdl.client, L.cdl.secret)
   await page.goto(`${ADMIN}/logistics/payouts`)
   await expect(page.getByRole("heading", { name: "Repasses aos entregadores" })).toBeVisible()
