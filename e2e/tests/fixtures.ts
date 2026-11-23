@@ -62,13 +62,14 @@ export function courierPending(courierId: string): void {
   psql(`update couriers.couriers set status='pending', reason='' where id='${courierId}'`)
 }
 
-/** O que a rede deve ao entregador agora: corridas e períodos fechados
-    menos o já pago (a mesma conta do core, payouts.payout_exceeds_owed). */
-export function owed(orgId: string, courierId: string): number {
-  return Number(psql(`select
-      coalesce((select sum(net_amount) from dispatch.rides where organization_id='${orgId}' and courier_id='${courierId}' and currency='BRL'), 0)
-    + coalesce((select sum(amount) from dispatch.period_closings where organization_id='${orgId}' and courier_id='${courierId}' and currency='BRL'), 0)
-    - coalesce((select sum(amount) from payouts.courier_payouts where organization_id='${orgId}' and courier_id='${courierId}' and currency='BRL'), 0)`))
+/** O que a rede deve ao entregador agora, lido do core
+    (GET …/couriers/{id}/payouts/owed): corridas e períodos fechados menos
+    o já pago, a mesma conta de payouts.payout_exceeds_owed. */
+export async function owed(orgId: string, courierId: string, network: { client: string; secret: string }): Promise<number> {
+  const tok = await token(network.client, network.secret)
+  const r = await fetch(`${TRANSACTION}/v1/organizations/${orgId}/couriers/${courierId}/payouts/owed?currency=BRL`, { headers: { authorization: `Bearer ${tok}` } })
+  if (r.status !== 200) throw new Error(`saldo devido: HTTP ${r.status} ${(await r.text()).slice(0, 300)}`)
+  return ((await r.json()) as { owed: number }).owed
 }
 
 /** Garante pelo menos `amount` devido: a rede fecha à mão um dia de diária
@@ -77,7 +78,7 @@ export function owed(orgId: string, courierId: string): number {
     fechado: a mesma chave com outro valor é 409, a mesma com o mesmo valor
     devolve o fechamento antigo (200) e não soma nada. */
 export async function ensureOwed(orgId: string, courierId: string, amount: number, network: { client: string; secret: string }): Promise<void> {
-  const missing = amount - owed(orgId, courierId)
+  const missing = amount - (await owed(orgId, courierId, network))
   if (missing <= 0) return
   const tok = await token(network.client, network.secret)
   const day = 24 * 3600 * 1000
