@@ -143,7 +143,7 @@ test("CDL não registra repasse acima do que a rede deve", async ({ page }) => {
 test("CDL registra um repasse ao entregador", async ({ page }) => {
   const reference = `E2E-PIX-${stamp}`
   /* Cada rodada paga R$ 123,45: o saldo devido tem de cobrir. */
-  ensureOwed(L.orgId, L.courierId, 12345)
+  await ensureOwed(L.orgId, L.courierId, 12345, L.cdl)
   await signIn(page, ADMIN, L.cdl.client, L.cdl.secret)
   await page.goto(`${ADMIN}/logistics/payouts`)
   await expect(page.getByRole("heading", { name: "Repasses aos entregadores" })).toBeVisible()
