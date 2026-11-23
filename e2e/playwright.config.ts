@@ -11,6 +11,7 @@ import { defineConfig, devices } from "@playwright/test"
 const store = process.env.E2E_STORE_URL || "http://localhost:5190"
 const mobile = process.env.E2E_MOBILE_URL || "http://localhost:5191"
 const seller = process.env.E2E_SELLER_URL || "http://localhost:5301"
+const entregas = process.env.E2E_ENTREGAS_URL || "http://localhost:5192"
 
 export default defineConfig({
   testDir: "tests",
@@ -37,5 +38,7 @@ export default defineConfig({
        minhas compras com o código de entrega (vitrine web). */
     { name: "comprador", testMatch: /comprador\.spec\.ts/, use: { baseURL: store, viewport: { width: 1366, height: 900 } } },
     { name: "lojista", testMatch: /lojista\.spec\.ts/, dependencies: ["loja-web", "loja-celular"], use: { baseURL: seller, viewport: { width: 1366, height: 900 } } },
+    /* O app do entregador (sabor entregas do app-mobile), em tela de celular. */
+    { name: "entregas", testMatch: /entregas\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: entregas } },
   ],
 })

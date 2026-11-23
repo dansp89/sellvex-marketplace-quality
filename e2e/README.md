@@ -9,6 +9,11 @@ aplicações:
 2. **lojista** (`app-seller`): entra e vê esses pedidos em «Pagamentos a
    confirmar».
 
+3. **entregador** (`app-mobile`, sabor `entregas`): entra → fica online →
+   um pedido real com entrega local (comprador e loja pela API) vira
+   oferta no app → aceita → lê o QR do volume na coleta → código errado
+   mostra o erro, o certo entrega → a corrida aparece no extrato.
+
 ## Por que aqui e não em cada repositório
 
 O fluxo não pertence a nenhuma app: o pedido nasce na vitrine e é
@@ -28,12 +33,17 @@ e as três apps servidas:
 | app-store (Nuxt) | 5190 | `bun run build && PORT=5190 bun .output/server/index.mjs` |
 | app-mobile | 5191 | `bun run build && bunx vite preview --port 5191` |
 | app-seller | 5301 | `bun run build && bunx vite preview --port 5301` |
+| app-mobile, sabor entregas | 5192 | `SELLVEX_APP_FLAVOUR=entregas bun run build && SELLVEX_APP_FLAVOUR=entregas bunx vite preview --port 5192` |
 
 ```bash
 bun install
 bun run prepare-stack   # idempotente: comprador, lojista, filiação, módulo de pagamentos
 bun run test            # loja-web, loja-celular e depois lojista
 bun run report          # relatório com as capturas de cada passo
+
+# o app do entregador (precisa da stack em wip/logistica-local do core)
+bun run prepare-entregas
+bunx playwright test --project entregas
 ```
 
 O navegador é o Chrome do sistema (`channel: "chrome"`); `E2E_BROWSER_CHANNEL`
@@ -85,6 +95,14 @@ filiação do lojista é gravada no Postgres local. O cliente do lojista leva
 o `sellvex_store_id` da loja escolhida num arquivo de clientes em `.tmp/`,
 montado no dev-idp por um override do compose — o repositório do core não
 é alterado.
+
+`prepare-entregas` (cabeçalho de `scripts/prepare-entregas.ts`) cria o
+entregador, um operador da plataforma e a equipe da CDL como **usuários**
+do dev-idp (`POST /admin/users`), sem recriar o container; liga shipping,
+couriers e dispatch na loja, concede `shipping.carriers` e põe `local` na
+lista, grava o regime do teste (R$ 8,00 com 10% de taxa), cria a frota
+privada com o entregador e faz a CDL aprovar documento e cadastro.
+`E2E_ENTREGAS_URL` troca o endereço do app.
 
 ## Limites conhecidos (backend)
 
