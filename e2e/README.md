@@ -41,6 +41,23 @@ troca. Endereços: `E2E_STORE_URL`, `E2E_MOBILE_URL`, `E2E_SELLER_URL`; a stack:
 `E2E_CONTROL_PLANE`, `E2E_COMMERCE`, `E2E_TRANSACTION`, `E2E_IDP`,
 `E2E_CORE_COMPOSE`, `E2E_COMPOSE_PROJECT`. `E2E_STORE_ID` fixa a loja.
 
+## Entrega local (logística)
+
+`tests/logistica.spec.ts` cobre: a plataforma grava um regime (app-admin),
+a CDL cria a frota, aprova o entregador e o põe na frota, o lojista liga a
+entrega local, prepara o pedido, reserva a entrega, marca pronto e baixa a
+etiqueta (app-seller), e a CDL vê a entrega no monitor de despacho.
+
+```bash
+bun run prepare-stack && bun run prepare-logistics
+E2E_ADMIN_URL=http://localhost:5300 E2E_SELLER_URL=http://localhost:5301 bunx playwright test --project=logistica
+```
+
+A preparação cria os clientes `e2e-cdl`, `e2e-operador` e `e2e-entregador`
+no dev-idp, as filiações, a CDL da organização, liga shipping/couriers/
+dispatch, concede `shipping.carriers` à loja e gera um pedido pago. Ver o
+cabeçalho de `scripts/prepare-logistics.ts`.
+
 ## O que a preparação faz e porquê
 
 Ver o cabeçalho de `scripts/prepare-stack.ts`. Em resumo: não há cadastro

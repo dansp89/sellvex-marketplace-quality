@@ -30,6 +30,9 @@ export default defineConfig({
   projects: [
     { name: "loja-web", testMatch: /compra\.spec\.ts/, use: { baseURL: store, viewport: { width: 1366, height: 900 } } },
     { name: "loja-celular", testMatch: /compra\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: mobile } },
+    /* Entrega local: plataforma e CDL no app-admin, lojista no app-seller;
+       cada teste usa os endereços absolutos (E2E_ADMIN_URL, E2E_SELLER_URL). */
+    { name: "logistica", testMatch: /logistica\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
     { name: "lojista", testMatch: /lojista\.spec\.ts/, dependencies: ["loja-web", "loja-celular"], use: { baseURL: seller, viewport: { width: 1366, height: 900 } } },
   ],
 })

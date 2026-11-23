@@ -5,6 +5,7 @@
   "description": "Ponta a ponta entre as apps: comprador na loja (web e celular) e lojista no painel",
   "scripts": {
     "prepare-stack": "bun scripts/prepare-stack.ts",
+    "prepare-logistics": "bun scripts/prepare-logistics.ts",
     "test": "playwright test",
     "report": "playwright show-report .tmp/report"
   },
