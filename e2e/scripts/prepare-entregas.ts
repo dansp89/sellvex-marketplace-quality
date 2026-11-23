@@ -18,14 +18,12 @@
  *    shipping.carriers e a loja põe `local` na lista.
  * 4. A plataforma grava o regime "por corrida" do teste (R$ 8,00, taxa de
  *    10%): o líquido esperado no app é R$ 7,20.
- * 5. O entregador se cadastra (PUT /v1/courier/me) e envia a CNH. Sem
- *    upload de mídia para o entregador (falta no core), o media_id é um
- *    uuid qualquer, como no teste de cenário do core.
- * 6. A loja cria a frota privada do teste e põe o entregador nela; só
- *    então a CDL o enxerga e aprova o documento e o cadastro.
+ * 5. O endereço de retirada da loja (a tarefa o leva ao entregador).
+ * 6. A loja cria a frota privada do teste. O entregador NÃO é criado
+ *    aqui: o teste faz o cadastro público pela tela, envia a CNH por
+ *    upload, e só então põe o entregador na frota e a CDL aprova
+ *    (`approveCourier`, abaixo).
  * 7. Uma variante em estoque, para o teste comprar.
- *
- * O entregador fica OFFLINE: quem o põe online é o teste, pela tela.
  *
  * Grava .tmp/entregas.json. */
 import { execFileSync } from "node:child_process"
@@ -46,7 +44,7 @@ const ISSUER = env("E2E_ISSUER", "http://dev-idp:9000")
 const PROJECT = env("E2E_COMPOSE_PROJECT", "sellvex-minimal")
 const PG = env("E2E_POSTGRES_CONTAINER", `${PROJECT}-postgres-1`)
 
-export const COURIER = { email: "entregador.app.e2e@sellvex.local", password: "entrega-app-e2e-123", name: "Entregador App E2E" }
+export const PICKUP = { country: "BR", postal_code: "37500-014", region: "MG", locality: "Itajubá", line1: "Av. BPS, 1303", recipient: "Balcão da loja E2E" }
 const OPERATOR = { email: "operador.app.e2e@sellvex.local", password: "operador-app-e2e-123", name: "Operador App E2E" }
 const CDL = { email: "cdl.app.e2e@sellvex.local", password: "cdl-app-e2e-123", name: "Equipe CDL App E2E" }
 const REGIME = "e2e-app-por-corrida"
@@ -103,7 +101,6 @@ async function main() {
   const s = `/v1/stores/${store}`
 
   step("logins")
-  let courierTok = await user(COURIER, "courier")
   const operatorTok = await user(OPERATOR, "platform_operator")
   let cdlTok = await user(CDL, "store_member", org)
   const seller = await token(state.seller.client, state.seller.secret)
@@ -115,11 +112,13 @@ async function main() {
         where not exists (select 1 from identity.memberships where issuer='${ISSUER}' and subject='${q(opSub)}'
                           and organization_id is null and store_id is null and deleted_at is null)`)
   const cdlSub = claims(cdlTok).sub!
-  const cdlPerms = "{couriers.regimes.read,couriers.fleets.read,couriers.fleets.write,couriers.couriers.read,couriers.couriers.review}"
+  const cdlPerms = "{couriers.regimes.read,couriers.fleets.read,couriers.fleets.write,couriers.couriers.read,couriers.couriers.review,payouts.couriers.read,payouts.couriers.write}"
   psql(`insert into identity.memberships (id, issuer, subject, organization_id, permissions, created_at, created_by, roles)
         select gen_random_uuid(), '${ISSUER}', '${q(cdlSub)}', '${org}', '${cdlPerms}', now(), 'e2e-prepare-entregas', '{}'
         where not exists (select 1 from identity.memberships where issuer='${ISSUER}' and subject='${q(cdlSub)}'
                           and organization_id='${org}' and store_id is null and deleted_at is null)`)
+  psql(`update identity.memberships set permissions='${cdlPerms}' where issuer='${ISSUER}' and subject='${q(cdlSub)}'
+        and organization_id='${org}' and store_id is null and deleted_at is null`)
   cdlTok = await token(CDL.email, CDL.password)
 
   step("módulos de entrega da loja")
@@ -146,42 +145,45 @@ async function main() {
     },
   }), [200, 201], "regime")
 
-  step("cadastro do entregador")
-  let me = await call<{ id: string; status: string; online: boolean; documents?: { id: string; status: string; valid: boolean }[] }>("GET", `${TRANSACTION}/v1/courier/me`, courierTok)
-  if (me.status === 404) {
-    must(await call("PUT", `${TRANSACTION}/v1/courier/me`, courierTok, { name: COURIER.name, phone: "+5535999990777", tax_id: "52998224725", vehicle: "motorcycle" }), [200], "cadastro")
-    me = await call("GET", `${TRANSACTION}/v1/courier/me`, courierTok)
-  }
-  const courierId = must(me, [200], "perfil").id
-  if (!(me.body.documents ?? []).some((d) => d.valid || d.status === "pending")) {
-    const until = new Date(Date.now() + 365 * 86_400_000).toISOString()
-    must(await call("POST", `${TRANSACTION}/v1/courier/documents`, courierTok, { kind: "cnh", media_id: crypto.randomUUID(), expires_on: until }), [201], "CNH")
-  }
+  step("endereço de retirada da loja")
+  must(await call("PUT", `${CONTROL}/v1/stores/${store}/pickup-address`, seller, PICKUP), [200, 201, 204], "endereço de retirada")
+
   step("frota privada da loja")
   const fleets = must(await call<{ items: { id: string; name: string }[] }>("GET", `${TRANSACTION}${s}/courier-fleets`, seller), [200], "frotas")
   let fleetId = fleets.items?.find((f) => f.name === FLEET)?.id
   if (!fleetId) fleetId = must(await call<{ id: string }>("POST", `${TRANSACTION}${s}/courier-fleets`, seller, { name: FLEET, visibility: "private", regime_id: REGIME }), [201], "criar frota").id
-  must(await call("PUT", `${TRANSACTION}${s}/courier-fleets/${fleetId}/members/${courierId}`, seller, {}), [200, 201], "pôr o entregador na frota")
-
-  step("aprovação pela CDL")
-  const detail = must(await call<{ status: string; documents?: { id: string; status: string }[] }>("GET", `${TRANSACTION}/v1/organizations/${org}/couriers/${courierId}`, cdlTok), [200], "a CDL lê o entregador")
-  for (const d of detail.documents ?? []) {
-    if (d.status === "pending") must(await call("POST", `${TRANSACTION}/v1/organizations/${org}/courier-documents/${d.id}/review`, cdlTok, { decision: "approve" }), [200], "aprovar documento")
-  }
-  if (detail.status !== "approved") must(await call("POST", `${TRANSACTION}/v1/organizations/${org}/couriers/${courierId}/review`, cdlTok, { decision: "approved" }), [200], "aprovar entregador")
-
-  step("entregador offline e sem rota pendente")
-  courierTok = await token(COURIER.email, COURIER.password)
-  must(await call("PUT", `${TRANSACTION}/v1/courier/presence`, courierTok, { online: false }), [200], "offline")
 
   step("variante em estoque")
   const products = must(await call<{ items: { id: string; title: string; variants?: { id: string; available?: number }[] }[] }>("GET", `${COMMERCE}/v1/storefronts/${store}/products?limit=50`, ""), [200], "produtos")
   const variant = products.items.flatMap((p) => (p.variants ?? []).map((v) => ({ product: p.title, ...v }))).find((v) => (v.available ?? 1) > 0)
   if (!variant) throw new Error("nenhuma variante em estoque na loja do teste")
 
-  const out = { store, org, courier: { ...COURIER, id: courierId }, regime: REGIME, fleetId, variant: { id: variant.id, product: variant.product } }
+  const out = { store, org, cdl: CDL, regime: REGIME, fleetId, pickup: PICKUP, variant: { id: variant.id, product: variant.product } }
   writeFileSync(join(tmp, "entregas.json"), JSON.stringify(out, null, 2))
-  console.log(`pronto: entregador ${courierId} na frota ${fleetId}, regime ${REGIME}`)
+  console.log(`pronto: frota ${fleetId}, regime ${REGIME}; o entregador é criado pelo teste`)
 }
+
+/** Depois do cadastro pela tela: a loja põe o entregador na frota e a
+    CDL aprova os documentos pendentes e o cadastro. */
+export async function approveCourier(setup: { store: string; org: string; fleetId: string; cdl: { email: string; password: string } }, sellerTok: string, courierId: string): Promise<void> {
+  const s = `/v1/stores/${setup.store}`
+  must(await call("PUT", `${TRANSACTION}${s}/courier-fleets/${setup.fleetId}/members/${courierId}`, sellerTok, {}), [200, 201], "pôr o entregador na frota")
+  const cdlTok = await token(setup.cdl.email, setup.cdl.password)
+  const detail = must(await call<{ status: string; documents?: { id: string; status: string }[] }>("GET", `${TRANSACTION}/v1/organizations/${setup.org}/couriers/${courierId}`, cdlTok), [200], "a CDL lê o entregador")
+  for (const d of detail.documents ?? []) {
+    if (d.status === "pending") must(await call("POST", `${TRANSACTION}/v1/organizations/${setup.org}/courier-documents/${d.id}/review`, cdlTok, { decision: "approve" }), [200], "aprovar documento")
+  }
+  if (detail.status !== "approved") must(await call("POST", `${TRANSACTION}/v1/organizations/${setup.org}/couriers/${courierId}/review`, cdlTok, { decision: "approved" }), [200], "aprovar entregador")
+}
+
+/** A CDL registra um repasse ao entregador. */
+export async function payCourier(setup: { org: string; cdl: { email: string; password: string } }, courierId: string, amount: number, reference: string): Promise<{ id: string }> {
+  const cdlTok = await token(setup.cdl.email, setup.cdl.password)
+  return must(await call<{ id: string }>("POST", `${TRANSACTION}/v1/organizations/${setup.org}/courier-payouts`, cdlTok, {
+    courier_id: courierId, currency: "BRL", amount, reference, paid_at: new Date().toISOString(),
+  }), [200, 201], "registrar repasse")
+}
+
+export { token }
 
 if (import.meta.main) main().catch((e) => { console.error(`✗ ${(e as Error).message}`); process.exit(1) })
