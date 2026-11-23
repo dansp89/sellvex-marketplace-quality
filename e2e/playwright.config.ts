@@ -33,6 +33,9 @@ export default defineConfig({
     /* Entrega local: plataforma e CDL no app-admin, lojista no app-seller;
        cada teste usa os endereços absolutos (E2E_ADMIN_URL, E2E_SELLER_URL). */
     { name: "logistica", testMatch: /logistica(-relatorios)?\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
+    /* Comprador com conta: cadastro, endereços, carrinho reivindicado, frete,
+       minhas compras com o código de entrega (vitrine web). */
+    { name: "comprador", testMatch: /comprador\.spec\.ts/, use: { baseURL: store, viewport: { width: 1366, height: 900 } } },
     { name: "lojista", testMatch: /lojista\.spec\.ts/, dependencies: ["loja-web", "loja-celular"], use: { baseURL: seller, viewport: { width: 1366, height: 900 } } },
   ],
 })

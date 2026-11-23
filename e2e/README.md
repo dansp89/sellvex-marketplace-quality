@@ -58,6 +58,24 @@ no dev-idp, as filiações, a CDL da organização, liga shipping/couriers/
 dispatch, concede `shipping.carriers` à loja e gera um pedido pago. Ver o
 cabeçalho de `scripts/prepare-logistics.ts`.
 
+## Comprador com conta
+
+`tests/comprador.spec.ts` cobre, na vitrine web: cadastro (com
+consentimento de ofertas na loja) → e-mail repetido recusado → entrar →
+telefone e endereço guardados na conta → checkout com o endereço da conta,
+em que o carrinho é reivindicado pela conta, recebe a entrega e cota o
+frete (entrega local), e o cupom inválido é dito → «Minhas compras» vem de
+`/v1/my-purchases` (limpar o aparelho não a esvazia) → o lojista confirma
+o pagamento e despacha pela entrega local (API) → o detalhe do pedido
+mostra a linha do tempo e o código de quatro dígitos.
+
+```bash
+bun run prepare-stack && bun run prepare-logistics && bun run prepare-buyer
+# a vitrine com a loja do teste (o id está em .tmp/state.json)
+NUXT_PUBLIC_STORE_ID=<id> PORT=5190 bun .output/server/index.mjs   # no app-store
+bunx playwright test --project=comprador
+```
+
 ## O que a preparação faz e porquê
 
 Ver o cabeçalho de `scripts/prepare-stack.ts`. Em resumo: não há cadastro
@@ -70,9 +88,7 @@ montado no dev-idp por um override do compose — o repositório do core não
 
 ## Limites conhecidos (backend)
 
-- «Meus pedidos» da plataforma (`orders.purchases.list`) responde 403 a
-  todo comprador: o `authn` do core não tem fonte de permissão para
-  `ActorCustomer`. A vitrine mostra então os pedidos feitos no aparelho,
-  relidos um a um por `storefront.checkouts.get`; o teste verifica isso.
-- O checkout da vitrine é anônimo: o pedido não fica ligado ao comprador
-  que entrou, mesmo com token.
+- Desde o core 8c3976e a vitrine reivindica o carrinho (`carts.carts.claim`)
+  antes do checkout quando há sessão, e «Minhas compras» lê
+  `/v1/my-purchases`. O `compra.spec.ts` antigo ainda confere o pedido pela
+  tabela de «Minhas compras».
