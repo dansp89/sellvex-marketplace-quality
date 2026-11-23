@@ -186,8 +186,9 @@ test("cadastro → entrar → endereço → checkout reivindicado com frete → 
     expect(co, "checkout guardado").toBeTruthy()
     const r = await fetch(`${TRANSACTION}/v1/storefronts/${co!.storeId}/checkouts/${co!.checkoutId}`)
     expect(r.status).toBe(200)
-    const body = (await r.json()) as { total_amount: number; shipping_included: boolean; shipping?: { amount: number; carrier: string } }
-    expect(body.shipping_included).toBe(true)
+    /* A leitura pública do checkout traz o frete cobrado (shipping); o
+       shipping_included é da leitura do lojista. */
+    const body = (await r.json()) as { total_amount: number; shipping?: { amount: number; carrier: string } }
     expect(body.shipping?.carrier).toBe("local")
     expect(body.shipping!.amount).toBeGreaterThan(0)
     /* O que a revisão mostrou é o mesmo total do servidor, já com o frete. */

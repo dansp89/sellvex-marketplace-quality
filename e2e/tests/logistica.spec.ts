@@ -127,7 +127,13 @@ test("lojista liga a entrega local, marca pronto e imprime a etiqueta", async ({
   await expect(page.getByRole("heading", { name: "Entrega local" })).toBeVisible()
   const sw = page.getByRole("switch", { name: "Entrega local" })
   await expect(sw).toBeEnabled()
-  if ((await sw.getAttribute("aria-checked")) !== "true") {
+  /* Só lê o estado depois que as políticas carregaram: lido antes, o
+     switch ainda dizia «desligado» e o clique desligava a entrega local
+     de uma loja que já a tinha (2ª rodada). */
+  await expect(page.getByText("Ativo").first()).toBeVisible()
+  /* O estado é a propriedade checked do input (role=switch); ele não
+     escreve aria-checked, e ler o atributo dava sempre «desligado». */
+  if (!(await sw.isChecked())) {
     await sw.click({ force: true })
     await expect(page.getByText(/Entrega local ligada/)).toBeVisible()
   }
@@ -141,6 +147,9 @@ test("lojista liga a entrega local, marca pronto e imprime a etiqueta", async ({
 
   await page.getByRole("button", { name: "Reservar entrega local" }).click()
   await expect(page.getByRole("heading", { name: "Reservar entrega local" })).toBeVisible()
+  /* O pedido do teste é comprado sem endereço: o lojista dá o destino. */
+  await page.getByRole("switch", { name: "Entregar em outro endereço" }).click({ force: true })
+  await expect(page.getByRole("heading", { name: "Entrega (o comprador)" })).toBeVisible()
   for (const [title, number] of [["Coleta (a loja)", "100"], ["Entrega (o comprador)", "250"]] as const) {
     const box = page.locator(".sx-address", { has: page.getByRole("heading", { name: title }) })
     await box.getByLabel("CEP").fill("69005010")

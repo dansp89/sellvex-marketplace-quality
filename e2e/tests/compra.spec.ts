@@ -54,7 +54,15 @@ test("navegar, comprar com Pix e ver o pedido", async ({ page }, info) => {
     await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25")
     await page.getByRole("button", { name: "Continuar" }).click()
 
-    await page.getByLabel("CEP").fill("01310-100")
+    /* Numa rodada seguinte o comprador já tem o endereço guardado na conta,
+       e ele vem escolhido: aí não há formulário a preencher. */
+    const cep = page.getByLabel("CEP")
+    const saved = page.getByText(/Avenida Paulista, 1000 .*CEP 01310-100/).first()
+    await expect(cep.or(saved).first()).toBeVisible()
+    if (await saved.isVisible()) {
+      await page.getByRole("button", { name: "Continuar" }).click()
+    } else {
+    await cep.fill("01310-100")
     /* O CEP é resolvido no ViaCEP, serviço externo: se não responder a
        tempo, o endereço é preenchido à mão, como faria o comprador. */
     const street = page.getByLabel("Rua")
@@ -69,6 +77,7 @@ test("navegar, comprar com Pix e ver o pedido", async ({ page }, info) => {
     }
     await page.getByLabel("Número").fill("1000")
     await page.getByRole("button", { name: "Continuar" }).click()
+    }
 
     await page.getByText("Pix", { exact: true }).first().click()
     await page.getByRole("button", { name: "Continuar" }).click()
