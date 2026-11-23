@@ -1,0 +1,4 @@
+node_modules/
+# Estado da preparação (ids da loja, usuário de teste), relatórios e capturas.
+.tmp/
+test-results/

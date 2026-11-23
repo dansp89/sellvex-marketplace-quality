@@ -11,6 +11,7 @@ Regra que governa tudo aqui (`08 §Gate de capacidade`): **"Não declare suporte
 | `k6/`, `soak/`, `spike/` | Cenários de `08 §Cenários de carga`, um por corte vertical |
 | `chaos/` | Injeção de falha: banco, broker, cache, réplica, célula (`04 §Caos`) |
 | `reports/` | Relatórios assinados e versionados, um por execução |
+| `e2e/` | Ponta a ponta entre as apps (Playwright): comprador na loja web e no app, lojista no painel |
 
 Nenhum cenário ou resultado é fabricado, em nenhuma dessas pastas: cada item entra com o registro exigido por `08 §Registro de cada teste`. As pastas estão vazias porque ainda não houve medição — um `.gitkeep` as mantém versionadas.
 
