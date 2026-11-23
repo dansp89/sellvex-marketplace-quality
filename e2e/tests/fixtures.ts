@@ -71,12 +71,27 @@ export function owed(orgId: string, courierId: string): number {
     - coalesce((select sum(amount) from payouts.courier_payouts where organization_id='${orgId}' and courier_id='${courierId}' and currency='BRL'), 0)`))
 }
 
-/** Garante pelo menos `amount` devido: fecha um período diário do teste
-    (dispatch.period_closings, como o worker faria) com a diferença. */
-export function ensureOwed(orgId: string, courierId: string, amount: number): void {
+/** Garante pelo menos `amount` devido: a rede fecha à mão um dia de diária
+    com a diferença (POST …/dispatch/period-closings, FR-PAYOUT-004), como o
+    fechamento de hora em hora faria. Cada rodada usa um dia ainda não
+    fechado: a mesma chave com outro valor é 409, a mesma com o mesmo valor
+    devolve o fechamento antigo (200) e não soma nada. */
+export async function ensureOwed(orgId: string, courierId: string, amount: number, network: { client: string; secret: string }): Promise<void> {
   const missing = amount - owed(orgId, courierId)
   if (missing <= 0) return
-  psql(`insert into dispatch.period_closings (id, organization_id, courier_id, regime_id, regime_version, kind, period_start, period_end, payer, currency, amount, closed_at)
-        values (gen_random_uuid(), '${orgId}', '${courierId}', 'e2e-repasse', 1, 'daily',
-                now() - interval '1 day' + (random() * interval '1 hour'), now(), 'network', 'BRL', ${missing}, now())`)
+  const tok = await token(network.client, network.secret)
+  const day = 24 * 3600 * 1000
+  // Meia-noite de Brasília (-03:00) de hoje, em UTC.
+  const today = Math.floor((Date.now() - 3 * 3600 * 1000) / day) * day + 3 * 3600 * 1000
+  for (let d = 1; d <= 400; d++) {
+    const r = await fetch(`${TRANSACTION}/v1/organizations/${orgId}/dispatch/period-closings`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${tok}`, "idempotency-key": crypto.randomUUID() },
+      body: JSON.stringify({ courier_id: courierId, regime_id: "e2e-repasse", regime_version: 1, kind: "daily",
+        period_start: new Date(today - d * day).toISOString(), payer: "cdl", currency: "BRL", amount: missing, reason: "e2e: saldo para o repasse" }),
+    })
+    if (r.status === 201) return
+    if (r.status !== 200 && r.status !== 409) throw new Error(`fechamento manual: HTTP ${r.status} ${(await r.text()).slice(0, 300)}`)
+  }
+  throw new Error("nenhum dia livre para fechar nos últimos 400")
 }
