@@ -48,6 +48,7 @@ export default defineConfig({
     { name: "chrome", testMatch: /chrome-flash\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome" } },
     /* A loja convida o próprio entregador e a CDL aprova (FR-COUR-006):
        painel do lojista (E2E_SELLER_URL) até a fila da CDL (E2E_ADMIN_URL). */
+    { name: "rastreio", testMatch: /rastreio\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
     { name: "frota-loja", testMatch: /frota-loja\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
     /* White label: a marca ativa em todas as apps e a troca sem rebuild. */
     { name: "marca", testMatch: /marca\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
