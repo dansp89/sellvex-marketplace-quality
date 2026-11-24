@@ -184,10 +184,19 @@ export async function payCourier(setup: { org: string; cdl: { email: string; pas
   }), [200, 201], "registrar repasse")
 }
 
-/** Tira da fila os entregadores de rodadas anteriores deste teste (o teste corre sozinho na stack; um
-    teste que falhou a meio deixa o seu online, e ele levaria a oferta). */
+/** Os entregadores que os testes criam: os do cadastro (entregas.spec), o
+    da fixture (prepare-logistics), os do rastreio e da frota da loja, e os
+    simulados do worker. Pessoas reais testando à mão na mesma stack nunca
+    casam: nada de tirar de linha quem não foi o teste que criou. */
+export const TEST_COURIERS_WHERE = `(full_name in ('Entregador E2E', 'Entregador Cadastro E2E')
+  or full_name like 'Rastreio Teste %' or full_name like 'Entregador Convidado %'
+  or subject like 'sellvex-simulator|%' or subject like '%|e2e-%')`
+
+/** Tira da fila os entregadores de rodadas anteriores dos testes (um teste
+    que falhou a meio deixa o seu online, e ele levaria a oferta). Só os de
+    teste: o entregador de quem testa à mão fica como está. */
 export function offlinePreviousRuns(): void {
-  psql(`update couriers.couriers set online = false where online`)
+  psql(`update couriers.couriers set online = false where online and ${TEST_COURIERS_WHERE}`)
 }
 
 export { token }

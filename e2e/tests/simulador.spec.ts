@@ -4,7 +4,8 @@ import { readFileSync } from "node:fs"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { state } from "./state"
-import { psql, token } from "./fixtures"
+import { token } from "./fixtures"
+import { offlinePreviousRuns } from "../scripts/prepare-entregas"
 
 /* Entregadores simulados (FR-COUR-005), com a stack de verdade:
  *
@@ -143,8 +144,9 @@ test.afterAll(async () => {
 
 test("simulador ligado: pedido entregue sozinho, selo no painel da CDL, desliga e ficam offline", async ({ page }) => {
   test.setTimeout(300_000)
-  // Entregadores reais de rodadas anteriores fora da fila: a oferta vai aos simulados.
-  psql(`update couriers.couriers set online = false where online`)
+  // Entregadores de teste de rodadas anteriores fora da fila: a oferta vai
+  // aos simulados. Só os de teste: quem testa à mão continua online.
+  offlinePreviousRuns()
 
   await test.step("liga o simulador (variável + reiniciar o worker)", async () => {
     worker(true, port)
