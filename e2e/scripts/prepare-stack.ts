@@ -17,6 +17,9 @@
  *    conta que a poderia conceder pela API é o develop da instalação, cuja
  *    senha não é do teste.
  * 6. Liga o módulo de pagamentos da loja (pagamento manual, DEC-PAY-004).
+ * 7. Repõe o estoque: toda variante da loja com menos de 20 disponíveis
+ *    ganha 50, pela API de ajuste. Cada rodada compra; sem isto a segunda
+ *    rodada seguida falhava com inventory.insufficient_stock.
  *
  * Escreve .tmp/state.json, que os testes leem. */
 import { execFileSync } from "node:child_process"
@@ -138,6 +141,30 @@ async function main() {
   }
   const probe = await fetch(`${TRANSACTION}/v1/stores/${store.id}/manual-payments`, { headers: { authorization: `Bearer ${sellerToken}` } })
   if (!probe.ok) throw new Error(`o lojista não lê os pagamentos manuais: HTTP ${probe.status}`)
+
+  step("estoque reposto")
+  const auth = { authorization: `Bearer ${sellerToken}` }
+  const houses = await json<{ items: { id: string }[] }>(`${COMMERCE}/v1/stores/${store.id}/warehouses?limit=50`, { headers: auth })
+  if (houses.status !== 200) throw new Error(`armazéns: HTTP ${houses.status}`)
+  let restocked = 0
+  for (const w of houses.body.items) {
+    let cursor = ""
+    do {
+      const page = await json<{ items: { variant_id: string; available: number }[]; next_cursor?: string }>(
+        `${COMMERCE}/v1/stores/${store.id}/warehouses/${w.id}/stock-positions?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, { headers: auth })
+      if (page.status !== 200) throw new Error(`posições de estoque: HTTP ${page.status}`)
+      for (const p of page.body.items.filter((x) => x.available < 20)) {
+        const r = await fetch(`${COMMERCE}/v1/stores/${store.id}/warehouses/${w.id}/stock-adjustments`, {
+          method: "POST", headers: { ...auth, "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+          body: JSON.stringify({ variant_id: p.variant_id, delta: 50, reason: "e2e: reposição entre rodadas" }),
+        })
+        if (r.status >= 300) throw new Error(`ajuste de estoque: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`)
+        restocked++
+      }
+      cursor = page.body.next_cursor ?? ""
+    } while (cursor)
+  }
+  console.log(`  ${restocked} variante(s) repostas`)
 
   const state = { store: { id: store.id, name: store.name, handle, organizationId }, buyer: BUYER, seller: SELLER }
   writeFileSync(join(tmp, "state.json"), JSON.stringify(state, null, 2))
