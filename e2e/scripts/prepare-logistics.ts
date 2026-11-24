@@ -54,6 +54,9 @@ async function token(id: string, secret: string): Promise<string | null> {
   return ((await r.json()) as { access_token?: string }).access_token ?? null
 }
 
+const REPASSE_REGIME = "e2e-repasse"
+const REPASSE_FLEET = "Frota E2E repasse"
+
 async function call(method: string, url: string, tok: string, body?: unknown): Promise<{ status: number; body: any }> {
   const headers: Record<string, string> = { authorization: `Bearer ${tok}` }
   if (method !== "GET") headers["idempotency-key"] = crypto.randomUUID()
@@ -160,6 +163,27 @@ async function main() {
     /* Uma rodada anterior aprovou: volta a pendente para o teste aprovar. */
     psql(`update couriers.couriers set status='pending', reason='' where id='${me.id}'`)
   }
+
+  /* O fechamento manual de período (FR-PAYOUT-004) só aceita entregador
+     preso, numa frota da rede, a um regime de diária ou fixo, e confere
+     regime, versão, pagador e moeda com o cadastrado: o saldo do repasse
+     (ensureOwed) vem de uma frota da CDL sob a diária e2e-repasse. */
+  step("regime e frota do repasse")
+  const versions = await call("GET", `${TRANSACTION}/v1/courier-regimes/${REPASSE_REGIME}/versions`, operator)
+  if (versions.status !== 200 || !(versions.body?.items ?? []).length) {
+    must(await call("PUT", `${TRANSACTION}/v1/courier-regimes/${REPASSE_REGIME}`, operator, {
+      name: "E2E repasse: diária",
+      rules: {
+        bond: "autonomous", payer: "cdl", currency: "BRL", pay: { model: "daily", daily_amount: 10_000 }, timing: "on_delivery", hold_hours: 0,
+        fee: { kind: "none" }, schedule: "free", max_refusals: 0, can_choose: true, area: {}, requirements: [],
+      },
+    }), "regime do repasse")
+  }
+  const cdlTok = (await token(CDL.client, CDL.secret))!
+  const fleets = must(await call("GET", `${TRANSACTION}/v1/organizations/${orgId}/courier-fleets`, cdlTok), "frotas da rede") as { items?: { id: string; name: string }[] }
+  let fleetId = fleets.items?.find((f) => f.name === REPASSE_FLEET)?.id
+  if (!fleetId) fleetId = (must(await call("POST", `${TRANSACTION}/v1/organizations/${orgId}/courier-fleets`, cdlTok, { name: REPASSE_FLEET, visibility: "cdl", regime_id: REPASSE_REGIME }), "frota do repasse") as { id: string }).id
+  must(await call("PUT", `${TRANSACTION}/v1/organizations/${orgId}/courier-fleets/${fleetId}/members/${me.id}`, cdlTok, {}), "entregador na frota do repasse")
 
   step("pedido pago")
   const products = must(await call("GET", `${COMMERCE}/v1/storefronts/${storeId}/products?limit=20`, seller), "produtos") as {

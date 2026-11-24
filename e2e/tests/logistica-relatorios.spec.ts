@@ -121,7 +121,7 @@ test("CDL vê o menu pelas permissões e abre o relatório de entregas", async (
 test("CDL não registra repasse acima do que a rede deve", async ({ page }) => {
   /* O core recusa (422 payouts.payout_exceeds_owed) um pagamento que passe
      do devido: corridas e períodos fechados menos o já pago. */
-  const due = owed(L.orgId, L.courierId)
+  const due = await owed(L.orgId, L.courierId, L.cdl)
   const above = Math.max(due, 0) + 100_000
   await signIn(page, ADMIN, L.cdl.client, L.cdl.secret)
   await page.goto(`${ADMIN}/logistics/payouts/new`)
