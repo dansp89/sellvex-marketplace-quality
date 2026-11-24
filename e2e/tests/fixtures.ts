@@ -96,3 +96,18 @@ export async function ensureOwed(orgId: string, courierId: string, amount: numbe
   }
   throw new Error("nenhum dia livre para fechar nos últimos 400")
 }
+
+/** Endereço de retirada da loja de teste depois dos testes que o trocam:
+    a loja fica em Itajubá, perto dos compradores, para as corridas terem
+    coordenadas e distância reais (um teste antigo deixava Manaus, a
+    2.600 km, e o mapa descartava as pontas). */
+export const HOME_PICKUP = { country: "BR", postal_code: "37500-018", region: "MG", locality: "Itajubá", line1: "Avenida Doutor Jerson Dias, 500", line2: "Estiva", recipient: "Obra Certa" }
+export async function restorePickup(storeId: string, seller: { client: string; secret: string }): Promise<void> {
+  const tok = await token(seller.client, seller.secret)
+  const control = process.env.E2E_CONTROL || "http://localhost:8080"
+  await fetch(`${control}/v1/stores/${storeId}/pickup-address`, {
+    method: "PUT",
+    headers: { authorization: `Bearer ${tok}`, "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+    body: JSON.stringify(HOME_PICKUP),
+  })
+}

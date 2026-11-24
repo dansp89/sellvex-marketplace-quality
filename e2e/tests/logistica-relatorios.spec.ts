@@ -2,7 +2,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import { readFileSync, existsSync } from "node:fs"
 import { join, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
-import { ensureOwed, owed } from "./fixtures"
+import { ensureOwed, owed, restorePickup } from "./fixtures"
 
 /* Relatórios, repasses e endereço de retirada (core 8c3976e), de ponta a
  * ponta entre o painel da CDL (app-admin) e o do lojista (app-seller):
@@ -25,6 +25,9 @@ const L = JSON.parse(readFileSync(file, "utf8")) as {
   cdl: { client: string; secret: string }; courier: { name: string }
 }
 const S = JSON.parse(readFileSync(join(tmp, "state.json"), "utf8")) as { seller: { client: string; secret: string } }
+
+/* A loja volta a retirar em Itajubá: este teste grava um endereço de Manaus. */
+test.afterAll(async () => { await restorePickup(L.storeId, S.seller) })
 
 const ADMIN = process.env.E2E_ADMIN_URL || "http://localhost:5300"
 const SELLER = process.env.E2E_SELLER_URL || "http://localhost:5301"
