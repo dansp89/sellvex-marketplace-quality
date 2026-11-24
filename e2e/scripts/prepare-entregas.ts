@@ -46,7 +46,7 @@ const PG = env("E2E_POSTGRES_CONTAINER", `${PROJECT}-postgres-1`)
 
 export const PICKUP = { country: "BR", postal_code: "37500-014", region: "MG", locality: "Itajubá", line1: "Av. BPS, 1303", recipient: "Balcão da loja E2E" }
 const OPERATOR = { email: "operador.app.e2e@sellvex.local", password: "operador-app-e2e-123", name: "Operador App E2E" }
-const CDL = { email: "cdl.app.e2e@sellvex.local", password: "cdl-app-e2e-123", name: "Equipe CDL App E2E" }
+const CDL = { email: "cdl.app.e2e@sellvex.local", password: "cdl-app-e2e-123", name: "Equipe Rede App E2E" }
 const REGIME = "e2e-app-por-corrida"
 const FLEET = "Frota E2E app entregas"
 
