@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { state } from "./state"
+import { restorePickup } from "./fixtures"
+import { prepareBuyer } from "../scripts/prepare-buyer"
 
 /* A cotação de frete presa ao destino do carrinho, pela API REST pública
  * (sem navegador): cotar para um CEP e fechar a compra entregando em
@@ -23,6 +25,11 @@ const contact = { name: "Comprador Frete", email: "frete-e2e@exemplo.com", phone
 const address = (postal: string) => ({
   country: "BR", postal_code: postal, locality: "Manaus", region: "AM", line1: "Rua Marcílio Dias, 250", latitude: -3.1370, longitude: -60.0240,
 })
+
+/* A retirada em Manaus antes (a entrega local só cota na cidade do
+   comprador) e a de Itajubá de volta depois, para os specs de logística. */
+test.beforeAll(async () => { await prepareBuyer(() => {}) })
+test.afterAll(async () => { const s = state(); await restorePickup(s.store.id, s.seller) })
 
 test("frete cotado para outro CEP é recusado no checkout", async () => {
   const store = state().store.id

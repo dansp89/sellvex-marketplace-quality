@@ -1,5 +1,7 @@
 import { test, expect, type Page, type Locator } from "@playwright/test"
 import { state } from "./state"
+import { restorePickup } from "./fixtures"
+import { prepareBuyer } from "../scripts/prepare-buyer"
 
 /* O comprador com conta, de ponta a ponta na vitrine web (Nuxt):
  *
@@ -54,6 +56,11 @@ async function fillAddress(page: Page, scope: Page | Locator = page) {
   }
   await scope.getByLabel("Número").fill("250")
 }
+
+/* A retirada em Manaus antes (a entrega local só cota na cidade do
+   comprador) e a de Itajubá de volta depois, para os specs de logística. */
+test.beforeAll(async () => { await prepareBuyer(() => {}) })
+test.afterAll(async () => { const s = state(); await restorePickup(s.store.id, s.seller) })
 
 test.describe.configure({ mode: "serial" })
 

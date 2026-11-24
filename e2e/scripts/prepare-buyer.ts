@@ -39,25 +39,29 @@ async function call(method: string, url: string, tok: string, body?: unknown) {
   return { status: r.status, text: await r.text() }
 }
 
-async function main() {
+/** O endereço de retirada em Manaus, a mesma cidade do comprador: a
+    entrega local só cota dentro da cidade. Os specs de logística e
+    entregas trocam a retirada para Itajubá; os do comprador chamam
+    prepareBuyer() antes para não depender da ordem da suíte. */
+export const BUYER_PICKUP = { country: "BR", postal_code: "69005-010", locality: "Manaus", region: "AM", line1: "Rua Marcílio Dias, 100", latitude: -3.1365, longitude: -60.0234 }
+
+export async function prepareBuyer(log: (m: string) => void = console.log) {
   const state = JSON.parse(readFileSync(join(tmp, "state.json"), "utf8")) as { store: { id: string }; seller: { client: string; secret: string } }
   const logistics = JSON.parse(readFileSync(join(tmp, "logistics.json"), "utf8")) as { operator: { client: string; secret: string } }
   const s = `${CONTROL}/v1/stores/${state.store.id}`
   const seller = await token(state.seller.client, state.seller.secret)
   const operator = await token(logistics.operator.client, logistics.operator.secret)
 
-  console.log("• endereço de retirada da loja")
-  const pickup = await call("PUT", `${s}/pickup-address`, seller, {
-    country: "BR", postal_code: "69005-010", locality: "Manaus", region: "AM", line1: "Rua Marcílio Dias, 100", latitude: -3.1365, longitude: -60.0234,
-  })
+  log("• endereço de retirada da loja")
+  const pickup = await call("PUT", `${s}/pickup-address`, seller, BUYER_PICKUP)
   if (pickup.status >= 300) throw new Error(`pickup-address: HTTP ${pickup.status} ${pickup.text.slice(0, 300)}`)
 
-  console.log("• transportadoras da loja: só a entrega local")
+  log("• transportadoras da loja: só a entrega local")
   const grant = await call("PUT", `${s}/policy-grants/shipping.carriers`, operator, { reason: "e2e: comprador com entrega local" })
   if (![200, 201, 204, 409].includes(grant.status)) throw new Error(`grant: HTTP ${grant.status} ${grant.text.slice(0, 300)}`)
   const policy = await call("PUT", `${s}/policies/shipping.carriers`, seller, { value: { list: ["local"] }, reason: "e2e: comprador com entrega local" })
   if (policy.status >= 300) throw new Error(`shipping.carriers: HTTP ${policy.status} ${policy.text.slice(0, 300)}`)
-  console.log(`pronto: loja ${state.store.id} — sirva a vitrine com NUXT_PUBLIC_STORE_ID=${state.store.id}`)
+  log(`pronto: loja ${state.store.id} — sirva a vitrine com NUXT_PUBLIC_STORE_ID=${state.store.id}`)
 }
 
-main().catch((e) => { console.error(`✗ ${(e as Error).message}`); process.exit(1) })
+if (import.meta.main) prepareBuyer().catch((e) => { console.error(`✗ ${(e as Error).message}`); process.exit(1) })
