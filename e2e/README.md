@@ -110,3 +110,17 @@ privada com o entregador e faz a CDL aprovar documento e cadastro.
   antes do checkout quando há sessão, e «Minhas compras» lê
   `/v1/my-purchases`. O `compra.spec.ts` antigo ainda confere o pedido pela
   tabela de «Minhas compras».
+
+## Entregadores simulados
+
+`tests/simulador.spec.ts` (projeto `simulador`) recria o worker com
+`SELLVEX_COURIER_SIMULATOR=on` para a CDL da loja, confere
+`/v1/health/config`, faz um pedido com entrega local pela API e espera um
+entregador simulado aceitar, coletar e entregar sozinho; depois confere o
+selo «Modo de teste» e o «Simulado» no painel da CDL e recria o worker com
+`off` (os simulados ficam offline). O `afterAll` desliga mesmo se falhar.
+
+```bash
+bun run prepare-stack && bun run prepare-logistics && bun run prepare-entregas
+E2E_ADMIN_URL=http://localhost:5300 bunx playwright test --project=simulador
+```
