@@ -8,6 +8,10 @@
  * confirma o pagamento, reserva a entrega local e marca pronto. A cascata
  * de despacho oferece cada corrida aos entregadores online da rede.
  *
+ * Antes, repõe o estoque da variante na loja quando o disponível não cobre
+ * a rodada (até 3 por pedido): sem isso o checkout falha com
+ * inventory.insufficient_stock. Mesma API de ajuste do prepare-stack.
+ *
  * Clientes com e-mail `teste.pedido.*@sellvex.local`, para a limpeza achar
  * só o que este script criou. Pré-requisito: prepare-stack, prepare-logistics
  * e prepare-entregas. */
@@ -53,6 +57,34 @@ async function until<T>(what: string, fn: () => Promise<T | null | undefined | f
   }
 }
 
+/** Quanto falta para ter `need` disponíveis, arredondado para cima com
+    folga (o ajuste nunca tira estoque). */
+export function restockDelta(available: number, need: number): number {
+  return available >= need ? 0 : need - available + 20
+}
+
+/** Repõe a variante em cada armazém da loja onde ela tem menos que `need`. */
+export async function restockVariant(sellerTok: string, need: number): Promise<number> {
+  const houses = await api<{ items: { id: string }[] }>("GET", `${COMMERCE}${S}/warehouses?limit=50`, sellerTok)
+  let total = 0
+  for (const w of houses.items) {
+    let cursor = ""
+    do {
+      const page = await api<{ items: { variant_id: string; available: number }[]; next_cursor?: string }>("GET",
+        `${COMMERCE}${S}/warehouses/${w.id}/stock-positions?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, sellerTok)
+      for (const p of page.items.filter((x) => x.variant_id === E.variant.id)) {
+        const delta = restockDelta(p.available, need)
+        if (!delta) continue
+        await api("POST", `${COMMERCE}${S}/warehouses/${w.id}/stock-adjustments`, sellerTok,
+          { variant_id: p.variant_id, delta, reason: "seed-test-orders: reposição antes dos pedidos" })
+        total += delta
+      }
+      cursor = page.next_cursor ?? ""
+    } while (cursor)
+  }
+  return total
+}
+
 async function one(sellerTok: string, n: number) {
   const name = pick(NAMES)
   const [street, district] = pick(STREETS)
@@ -94,8 +126,14 @@ async function one(sellerTok: string, n: number) {
   console.log(`pedido ${n}: ${name}, ${street}, ${number} (${district}) — ${qty} item(ns), pronto para coleta`)
 }
 
-const count = Math.max(1, Math.min(20, Number(process.argv[2] ?? 3) || 3))
-const { seller } = state()
-const sellerTok = await token(seller.client, seller.secret)
-for (let i = 1; i <= count; i++) await one(sellerTok, i)
-console.log(`${count} pedido(s) criados; as ofertas vão para os entregadores online.`)
+async function main() {
+  const count = Math.max(1, Math.min(20, Number(process.argv[2] ?? 3) || 3))
+  const { seller } = state()
+  const sellerTok = await token(seller.client, seller.secret)
+  const added = await restockVariant(sellerTok, count * 3)
+  if (added) console.log(`estoque reposto: +${added}`)
+  for (let i = 1; i <= count; i++) await one(sellerTok, i)
+  console.log(`${count} pedido(s) criados; as ofertas vão para os entregadores online.`)
+}
+
+if (import.meta.main) main().catch((e) => { console.error(`✗ ${(e as Error).message}`); process.exit(1) })
