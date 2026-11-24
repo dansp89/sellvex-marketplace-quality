@@ -39,6 +39,9 @@ export default defineConfig({
     { name: "comprador", testMatch: /(comprador|emails)\.spec\.ts/, use: { baseURL: store, viewport: { width: 1366, height: 900 } } },
     { name: "lojista", testMatch: /lojista\.spec\.ts/, dependencies: ["loja-web", "loja-celular"], use: { baseURL: seller, viewport: { width: 1366, height: 900 } } },
     /* O app do entregador (sabor entregas do app-mobile), em tela de celular. */
+    /* Entregadores simulados (FR-COUR-005): recria o worker com o simulador
+       ligado, vê um pedido entregue sozinho e desliga de novo. */
+    { name: "simulador", testMatch: /simulador\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
     { name: "entregas", testMatch: /entregas\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: entregas } },
   ],
 })
