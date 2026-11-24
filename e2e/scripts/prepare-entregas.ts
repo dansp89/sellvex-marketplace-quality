@@ -1,4 +1,4 @@
-/* Prepara a stack para o ponta a ponta do app Sellvex Entregas
+/* Prepara a stack para o ponta a ponta do app Sellvex Log
  * (core docs/logistica.md §9). Roda depois de `prepare-stack` (lê
  * .tmp/state.json: a loja e o lojista) e é idempotente.
  *

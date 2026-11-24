@@ -90,7 +90,7 @@ test("CDL cria a frota, aprova o entregador e aceita o pedido de entrada", async
   fleetId = page.url().match(/fleets\/([0-9a-f-]{36})/)?.[1] ?? ""
   expect(fleetId).not.toBe("")
 
-  /* O entregador pede entrada pelo app Sellvex Entregas. */
+  /* O entregador pede entrada pelo app Sellvex Log. */
   const r = await fetch(`${TRANSACTION}/v1/courier/fleet-applications`, {
     method: "POST",
     headers: { authorization: `Bearer ${await courierToken()}`, "content-type": "application/json", "idempotency-key": crypto.randomUUID() },

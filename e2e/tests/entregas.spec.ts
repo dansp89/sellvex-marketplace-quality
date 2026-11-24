@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url"
 import { state } from "./state"
 import { approveCourier, payCourier, offlinePreviousRuns } from "../scripts/prepare-entregas"
 
-/* O entregador no app Sellvex Entregas, do cadastro ao repasse, com um
+/* O entregador no app Sellvex Log, do cadastro ao repasse, com um
  * pedido de verdade:
  *
  *   cria a conta pela tela (cadastro público) → completa o perfil → envia
