@@ -204,7 +204,9 @@ test("entregador: cadastro, upload da CNH, oferta real, coleta por QR, telefone 
     await page.getByTestId("signup-next").click()
 
     await expect(page).toHaveURL(/\/signup\/done$/)
-    await expect(page.getByTestId("onboarding-status")).toHaveText("Em análise pela CDL")
+    await expect(page.getByTestId("onboarding-status")).toHaveText("Aguardando aprovação")
+    /* O app do entregador nunca cita a CDL. */
+    await expect(page.locator("body")).not.toContainText("CDL")
     await shot(page, "07-concluido")
 
     const me = await api<{ documents?: { kind: string; status: string; media_id: string }[] }>("GET", `${TRANSACTION}/v1/courier/me`, tok)
