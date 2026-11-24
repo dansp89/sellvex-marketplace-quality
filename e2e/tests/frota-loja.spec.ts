@@ -44,6 +44,12 @@ async function choose(page: Page, field: Locator, option: string | RegExp) {
   await field.click()
   await page.getByRole("option", { name: option }).first().click()
 }
+/* O data-testid pode estar no próprio campo ou no componente que o envolve. */
+async function input(page: Page, id: string): Promise<Locator> {
+  const el = page.getByTestId(id)
+  const inner = el.locator("input")
+  return (await inner.count()) ? inner.first() : el
+}
 const shot = (page: Page, n: string) => page.screenshot({ path: test.info().outputPath(`${n}.png`), fullPage: true })
 
 async function call(method: string, url: string, tok: string | null, body?: unknown): Promise<{ status: number; json: any }> {
@@ -91,9 +97,9 @@ test("lojista convida o próprio entregador", async ({ page }) => {
   await shot(page, "01-entregadores")
   await page.getByTestId("couriers-invite").click()
   await expect(page).toHaveURL(/\/couriers\/invite/)
-  await page.getByTestId("invite-name").locator("input").or(page.getByTestId("invite-name")).first().fill(name)
-  await page.getByTestId("invite-phone").locator("input").or(page.getByTestId("invite-phone")).first().fill("35999990199")
-  await page.getByTestId("invite-email").locator("input").or(page.getByTestId("invite-email")).first().fill(email)
+  await (await input(page, "invite-name")).fill(name)
+  await (await input(page, "invite-phone")).fill("35999990199")
+  await (await input(page, "invite-email")).fill(email)
   await choose(page, page.getByTestId("invite-fleet"), new RegExp(fleetName))
   await shot(page, "02-convite")
   await page.getByTestId("invite-submit").click()
