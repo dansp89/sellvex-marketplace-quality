@@ -233,7 +233,8 @@ test("entregador: cadastro, upload da CNH, oferta real, coleta por QR, telefone 
     const toggle = page.getByTestId("online-toggle")
     await expect(toggle).toBeEnabled()
     await expect(toggle).toContainText("Offline")
-    await toggle.click()
+    /* Ficar online é deslizar; o teclado (Enter) é o mesmo gesto acessível. */
+    await page.getByTestId("online-slide").press("Enter")
     await expect(toggle).toContainText("Online")
     await expect(page.getByTestId("presence-dot")).toHaveText("Online")
     await shot(page, "2-online")
@@ -250,13 +251,17 @@ test("entregador: cadastro, upload da CNH, oferta real, coleta por QR, telefone 
     await expect(page.getByTestId("offer-countdown")).toHaveText(/^\s*\d+:\d{2}\s*$/)
     if (task.distance_estimated && task.distance_meters > 0) await expect(page.getByTestId("offer-distance")).toContainText(/≈.*estimada/)
     await shot(page, "3-oferta")
-    await page.getByTestId("offer-accept").click()
+    await page.getByTestId("offer-accept").press("Enter")
     await expect(page).toHaveURL(new RegExp(`/tasks/${task.id}$`))
     await expect(page.getByTestId("task-status")).toHaveText("Coletar na loja")
     /* O endereço que a loja tem agora (outro teste na mesma stack pode tê-lo trocado). */
     const pickup = await api<{ line1: string }>("GET", `${CONTROL}/v1/stores/${setup.store}/pickup-address`, sellerTok)
     await expect(page.getByTestId("task-pickup")).toContainText(pickup.line1)
     await expect(page.getByTestId("call-recipient"), "antes da coleta o telefone não aparece").toHaveCount(0)
+    /* O mapa da corrida: entregador, retirada e destino com pinos, navegar. */
+    await expect(page.getByTestId("ride-map")).toBeVisible()
+    await expect(page.getByTestId("map-open-maps")).toHaveAttribute("href", /google\.com\/maps\/dir/)
+    await expect(page.getByTestId("map-pickup")).toBeVisible({ timeout: 20_000 })
     await shot(page, "4-tarefa-coleta")
   })
 
@@ -319,7 +324,7 @@ test("entregador: cadastro, upload da CNH, oferta real, coleta por QR, telefone 
 
   await test.step("ficar offline no fim (e o tema escuro)", async () => {
     await page.goto("/")
-    await page.getByTestId("online-toggle").click()
+    await page.getByTestId("online-pause").click()
     await expect(page.getByTestId("online-toggle")).toContainText("Offline")
     await page.evaluate(() => localStorage.setItem("sx-theme", "dark"))
     await page.reload()
