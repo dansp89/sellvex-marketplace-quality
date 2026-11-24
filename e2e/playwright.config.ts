@@ -42,6 +42,8 @@ export default defineConfig({
     /* Entregadores simulados (FR-COUR-005): recria o worker com o simulador
        ligado, vê um pedido entregue sozinho e desliga de novo. */
     { name: "simulador", testMatch: /simulador\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
+    /* Frete preso ao destino do carrinho, só pela API REST. */
+    { name: "frete", testMatch: /frete-destino\.spec\.ts/ },
     { name: "entregas", testMatch: /entregas\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: entregas } },
   ],
 })
