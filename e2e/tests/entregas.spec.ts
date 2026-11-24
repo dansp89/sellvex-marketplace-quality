@@ -132,46 +132,93 @@ test("entregador: cadastro, upload da CNH, oferta real, coleta por QR, telefone 
 
   offlinePreviousRuns()
   let courierId = ""
-  await test.step("cadastro público pela tela", async () => {
+  await test.step("onboarding em etapas: conta, contato, veículo, CNH, revisão", async () => {
     await page.goto("/")
     await expect(page).toHaveURL(/\/login/)
     await page.getByTestId("go-signup").click()
     await expect(page).toHaveURL(/\/signup$/)
+    await shot(page, "01-boas-vindas")
+    await page.getByTestId("signup-next").click()
+
+    await expect(page).toHaveURL(/\/signup\/account$/)
+    await expect(field(page, "signup-name"), "foco no primeiro campo").toBeFocused()
+    await page.getByTestId("signup-next").click()
+    await expect(page.getByText("Digite nome e sobrenome.")).toBeVisible()
     await field(page, "signup-name").fill(courier.name)
     await field(page, "signup-email").fill(courier.email)
-    await field(page, "signup-phone").fill(courier.phone)
     await field(page, "signup-password").fill(courier.password)
-    await expect(page.getByTestId("signup-submit")).toBeDisabled()
-    await page.getByTestId("signup-terms").locator("input").or(page.locator('input[data-testid="signup-terms"]')).first().check()
-    await shot(page, "01-cadastro")
-    await page.getByTestId("signup-submit").click()
-    await expect(page).toHaveURL(/\/profile\/edit$/, { timeout: 20_000 })
-    await field(page, "profile-name").fill(courier.name)
-    await field(page, "profile-phone").fill(courier.phone)
-    await field(page, "profile-cpf").fill(courier.cpf)
-    await page.getByTestId("profile-save").click()
-    await expect(page).toHaveURL(/\/profile$/)
-    const tok = await token(courier.email, courier.password)
-    courierId = (await api<{ id: string }>("GET", `${TRANSACTION}/v1/courier/me`, tok)).id
-  })
+    await shot(page, "02-conta")
+    await page.getByTestId("signup-next").click()
 
-  await test.step("enviar a CNH por upload", async () => {
-    await page.getByTestId("add-document").click()
-    await expect(page).toHaveURL(/\/profile\/documents\/new$/)
-    await expect(page.getByTestId("document-submit")).toBeDisabled()
+    await expect(page).toHaveURL(/\/signup\/contact$/)
+    await field(page, "signup-phone").fill(courier.phone)
+    await field(page, "signup-cpf").fill("52998224724")
+    await page.getByTestId("signup-next").click()
+    await expect(page.getByText(/CPF não confere/)).toBeVisible()
+    await field(page, "signup-cpf").fill(courier.cpf)
+    /* O rascunho sobrevive ao recarregar (sem a senha: a etapa da conta pede-a de novo). */
+    await page.reload()
+    await expect(page).toHaveURL(/\/signup\/account$/)
+    await expect(page.getByTestId("signup-notice")).toBeVisible()
+    await expect(field(page, "signup-name")).toHaveValue(courier.name)
+    await field(page, "signup-password").fill(courier.password)
+    await page.getByTestId("signup-next").click()
+    await expect(page).toHaveURL(/\/signup\/contact$/)
+    await expect(field(page, "signup-phone")).not.toHaveValue("")
+    await shot(page, "03-contato")
+    await page.getByTestId("signup-next").click()
+
+    await expect(page).toHaveURL(/\/signup\/vehicle$/)
+    await page.getByTestId("vehicle-motorcycle").click()
+    await expect(page.getByTestId("vehicle-motorcycle")).toHaveAttribute("aria-checked", "true")
+    await page.getByTestId("signup-terms").locator("input").or(page.locator('input[data-testid="signup-terms"]')).first().check()
+    await shot(page, "04-veiculo")
+    await page.getByTestId("signup-next").click()
+
+    /* A conta e o perfil nasceram juntos: nada é pedido de novo. */
+    await expect(page).toHaveURL(/\/signup\/documents$/, { timeout: 20_000 })
+    const tok = await token(courier.email, courier.password)
+    const me0 = await api<{ id: string; name: string; phone: string; tax_id: string; vehicle: string }>("GET", `${TRANSACTION}/v1/courier/me`, tok)
+    expect(me0).toMatchObject({ name: courier.name, phone: `+55${courier.phone}`, tax_id: courier.cpf, vehicle: "motorcycle" })
+    courierId = me0.id
+
     const chooser = page.waitForEvent("filechooser")
     await page.getByTestId("photo-take").click()
     await (await chooser).setFiles({ name: "cnh.png", mimeType: "image/png", buffer: PNG })
     await expect(page.getByTestId("photo-preview")).toBeVisible()
-    await shot(page, "02-documento")
-    await page.getByTestId("document-submit").click()
-    await expect(page).toHaveURL(/\/profile$/, { timeout: 20_000 })
-    const tok = await token(courier.email, courier.password)
+    await shot(page, "05-documento")
+    await page.getByTestId("signup-next").click()
+
+    await expect(page).toHaveURL(/\/signup\/review$/, { timeout: 20_000 })
+    const review = page.getByTestId("signup-review")
+    await expect(review).toContainText(courier.email)
+    await expect(review).toContainText("529.982.247-25")
+    await expect(review).toContainText("Moto")
+    await expect(review).toContainText("CNH")
+    /* Editar uma etapa volta à revisão, e o voltar do navegador funciona. */
+    await page.getByTestId("review-edit-vehicle").click()
+    await expect(page).toHaveURL(/\/signup\/vehicle\?from=review$/)
+    await page.goBack()
+    await expect(page).toHaveURL(/\/signup\/review$/)
+    await shot(page, "06-revisao")
+    await page.getByTestId("signup-next").click()
+
+    await expect(page).toHaveURL(/\/signup\/done$/)
+    await expect(page.getByTestId("onboarding-status")).toHaveText("Em análise pela CDL")
+    await shot(page, "07-concluido")
+
     const me = await api<{ documents?: { kind: string; status: string; media_id: string }[] }>("GET", `${TRANSACTION}/v1/courier/me`, tok)
     const cnh = me.documents?.find((d) => d.kind === "cnh")
     expect(cnh, "a CNH entrou no cadastro").toBeTruthy()
     const up = await api<{ status: string; kind: string; size_bytes: number }>("GET", `${TRANSACTION}/v1/courier/uploads/${cnh!.media_id}`, tok)
     expect(up).toMatchObject({ status: "uploaded", kind: "document", size_bytes: PNG.length })
+
+    await page.getByTestId("signup-next").click()
+    await expect(page).toHaveURL(/\/$/)
+    /* A edição continua existindo, sempre pré-preenchida. */
+    await page.goto("/profile/edit")
+    await expect(field(page, "profile-phone")).not.toHaveValue("")
+    await expect(field(page, "profile-name")).toHaveValue(courier.name)
   })
 
   await test.step("a loja põe na frota e a CDL aprova", async () => {
