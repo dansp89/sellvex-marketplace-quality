@@ -148,7 +148,10 @@ test("preparo: entregador de bicicleta na frota da loja e pedido com destino no 
 
   buyerTok = await login(ST.buyer.email, ST.buyer.password)
   const cart = await ok("POST", `${COMMERCE}${F}/carts`, null, { currency: "BRL" })
-  await ok("PUT", `${COMMERCE}${F}/carts/${cart.id}/items/${E.variant.id}`, null, { quantity: 1 })
+  /* Uma variante com estoque: rodadas seguidas esgotam a do preparo. */
+  const products = await ok("GET", `${COMMERCE}${F}/products?limit=50`, null)
+  const variant = (products.items as { variants?: { id: string; available?: number }[] }[]).flatMap((p) => p.variants ?? []).find((v) => (v.available ?? 0) > 0)?.id ?? E.variant.id
+  await ok("PUT", `${COMMERCE}${F}/carts/${cart.id}/items/${variant}`, null, { quantity: 1 })
   const address = { country: "BR", postal_code: "37500-123", region: "MG", locality: "Itajubá", line1: "Rua Dr. Pereira, 45", line2: "Centro", ...DEST }
   await ok("PUT", `${COMMERCE}${F}/carts/${cart.id}/delivery`, null, { address, contact: { name: "Teste Rastreio", email: `teste.rastreio.${stamp}@sellvex.local`, phone: "+5535999991234" } })
   await ok("POST", `${COMMERCE}${F}/carts/${cart.id}/claim`, buyerTok)
