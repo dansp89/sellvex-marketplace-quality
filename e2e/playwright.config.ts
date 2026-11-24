@@ -44,6 +44,8 @@ export default defineConfig({
     { name: "simulador", testMatch: /simulador\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
     /* Frete preso ao destino do carrinho, só pela API REST. */
     { name: "frete", testMatch: /frete-destino\.spec\.ts/ },
+    /* Nenhum frame com o chrome errado no arranque (entregas, plataforma, lojista). */
+    { name: "chrome", testMatch: /chrome-flash\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome" } },
     { name: "entregas", testMatch: /entregas\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: entregas } },
   ],
 })
