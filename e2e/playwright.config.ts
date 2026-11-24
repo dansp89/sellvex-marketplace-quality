@@ -53,6 +53,7 @@ export default defineConfig({
     /* White label: a marca ativa em todas as apps e a troca sem rebuild. */
     { name: "marca", testMatch: /marca\.spec\.ts/, use: { viewport: { width: 1366, height: 900 } } },
     { name: "entregas-senha", testMatch: /entregas-senha\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: entregas } },
+    { name: "entregas-nav", testMatch: /entregas-nav\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: entregas } },
     { name: "entregas", testMatch: /entregas\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome", baseURL: entregas } },
   ],
 })
