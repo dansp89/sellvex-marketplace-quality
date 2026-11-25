@@ -15,8 +15,10 @@ import { check, fail, sleep } from "k6"
 import { Counter, Trend } from "k6/metrics"
 import { SharedArray } from "k6/data"
 
-const D = JSON.parse(open("./.tmp/dados.json"))
-const LOJAS = new SharedArray("lojas", () => D.lojas)
+// Só o SharedArray lê o arquivo (uma vez, não por VU): com 120 mil lojas o
+// JSON.parse por VU saturava o gerador a cada VU novo.
+const D = new SharedArray("dados", () => { const x = JSON.parse(open("./.tmp/dados.json")); return [{ quentes: x.quentes, entregadores: x.entregadores, segredo: x.segredo }] })[0]
+const LOJAS = new SharedArray("lojas", () => JSON.parse(open("./.tmp/dados.json")).lojas)
 const QUENTES = D.quentes
 const CENARIO = __ENV.CENARIO || "vitrine"
 const TAXA = Number(__ENV.TAXA || 10)

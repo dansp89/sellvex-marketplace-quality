@@ -122,6 +122,7 @@ async function degrau(cen: string, taxa: number, ids: Record<string, string>, ma
   const fim = new Promise<number>((r) => p.on("exit", (c) => r(c ?? 1)))
   const mem: Record<string, number> = {}, conn: Record<string, number> = {}
   let k6Id = "", k6Cpu0 = 0, k6CpuMax = 0, k6Prev = 0, k6PrevT = 0, k6Last = 0
+  const janela: number[] = [] // média móvel de 3 s: um pico de 1 s de inicialização de VU não é saturação
   let natsMax = 0, obMax = 0
   let acabou = false
   fim.then(() => { acabou = true })
@@ -133,7 +134,8 @@ async function degrau(cen: string, taxa: number, ids: Record<string, string>, ma
       try {
         const u = cpuUsec(k6Id), t = performance.now()
         const frac = (u - k6Prev) / ((t - k6PrevT) * 1000) / k6Cpus
-        if (t - t0 > 4000) k6CpuMax = Math.max(k6CpuMax, frac) // ignora a partida do k6
+        janela.push(frac); if (janela.length > 3) janela.shift()
+        if (t - t0 > 6000 && janela.length === 3) k6CpuMax = Math.max(k6CpuMax, janela.reduce((a, b) => a + b) / 3) // ignora a partida do k6
         k6Prev = u; k6PrevT = t; k6Last = u
       } catch {}
     }
