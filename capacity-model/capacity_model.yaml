@@ -41,6 +41,12 @@ measured_bench_2026_11_25:
   db_bytes_per_order: [26734, 34980]            # degrau de referência; média de todos os degraus: 25083
   wal_bytes_per_order: [58530, 83215]
   db_pool_connections_per_instance: 10
-  search_p95_ms_by_stores: {200: 31.4, 2000: 131.0, 20000: 207.7, 120000: 5873.7}   # bloqueio: índice não usado
+  search_p95_ms_by_stores: {200: 31.4, 2000: 131.0, 20000: 207.7, 120000: 5873.7}   # antes da correção (core ba7ca6c)
+  after_fix_core_1bc5508_120000_stores:   # mesmo harness, só vitrine e busca
+    storefront_rps_max_in_budget: 902.6     # antes: 0 (p95 90,1 ms a 112 RPS)
+    storefront_p95_ms_at_max: 14.5
+    storefronts_list_p95_ms: 4.8            # antes: 170
+    search_rps_max_in_budget: 0             # ainda fora do orçamento
+    search_p95_ms_at_5_rps: 2305.4          # antes: 5873.7; p50 243,3
 reports:
   - reports/2026-11-25-k6-capacidade.md

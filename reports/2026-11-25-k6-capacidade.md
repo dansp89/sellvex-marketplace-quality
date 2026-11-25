@@ -530,3 +530,19 @@ bash k6/ficha-maquina.sh saida.txt /dir/no/disco/alvo   # no servidor alvo: fich
 ```
 
 `pg_stat_statements` foi ligado no Postgres local (`ALTER SYSTEM` + `docker restart` do contêiner, sem recriar).
+
+## Depois da correção no core (120 mil lojas, só vitrine e busca)
+
+Mesmo harness e mesma base (`bun k6/medir.ts 120000-depois vitrine busca`; dados em `reports/data/2026-11-25/120000-depois-{vitrine,busca}.json`), core no commit `1bc5508` (migrações `listings/20261125120000_search_vector` e `stores/20261125120000_index_open_stores`). Os números de "antes" acima ficam como estão.
+
+**Diagnóstico revisto da busca.** A consulta já usava a configuração literal `'simple'`: o `$4` que aparece no `pg_stat_statements` é a normalização de constantes da extensão, não um parâmetro. `EXPLAIN (ANALYZE, BUFFERS)` mostrou o índice `ix_listings__search` em uso nas 64 partições. O custo vinha de outro lugar: termos comuns do k6 (`kit` casa 120.035 listagens, uma por loja) obrigam a calcular `ts_rank(to_tsvector(...))` em todas as linhas que casam — refazendo o tsvector de cada uma — e ordenar tudo (442 ms numa chamada isolada, ordenação em disco). A correção guarda o vetor (`search_vector`, coluna gerada, com índice GIN): a mesma chamada caiu para ~140 ms, agora limitada por ler 36 mil páginas do heap (~280 MB, maior que `shared_buffers` de 128 MB) só para ranquear.
+
+**Lista de lojas.** `ListOpenStoresFirst/After` fazia Seq Scan + top-N sort em `stores.stores` (41 ms isolada, ~100 ms sob carga). Com o índice parcial `(created_at DESC, id DESC) WHERE status = 'active' AND NOT paused AND NOT suspended` virou Index Only Scan: **0,12 ms**.
+
+| cenário | antes: RPS no orçamento | antes: p95 | depois: RPS no orçamento | depois: p95 no degrau de referência |
+|---|---|---|---|---|
+| vitrine (orçamento 50 ms) | 0 (112 RPS a p95 90,1 ms) | 90,1 ms | **902,6** | 14,5 ms (p99 38,5) |
+| `GET /storefronts` | — | 170 ms | — | **4,8 ms** |
+| busca (orçamento 50 ms) | 0 | 5.873,7 ms a 5 req/s | **0** | 2.305,4 ms a 5 req/s (p50 243,3) |
+
+A vitrine quebrou a 1.501 RPS (p95 422,7 ms, iterações descartadas), não por banco. **A busca continua fora do orçamento**: ranquear todas as linhas que casam um termo comum é linear no número de lojas, e nenhum índice resolve isso enquanto a ordem for por `ts_rank` sobre o conjunto inteiro. Saídas: limitar o conjunto ranqueado (muda a relevância — decisão de produto) ou a busca fora do Postgres prevista em DEC-INFRA-001.

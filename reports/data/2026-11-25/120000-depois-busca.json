@@ -1,0 +1,165 @@
+{
+  "rotulo": "120000-depois",
+  "cenario": "busca",
+  "classe": "public-read",
+  "orcamento_p95_ms": 50,
+  "rps_max_no_orcamento": 0,
+  "quebra": "p95 2305.4 ms > 50 ms",
+  "gerador_saturou_antes": false,
+  "memoria_ociosa_mb": {
+    "dev-idp": 44.4,
+    "worker": 12.8,
+    "commerce-api": 51.1,
+    "control-plane-api": 33.2,
+    "transaction-api": 49.2,
+    "otel-collector": 26.2,
+    "postgres": 3018.7,
+    "nats": 201.2,
+    "valkey": 3.9,
+    "mailpit": 23.5
+  },
+  "conexoes_ociosas": {
+    "transaction-api": 2,
+    "worker": 3,
+    "commerce-api": 10,
+    "control-plane-api": 2,
+    "local": 1
+  },
+  "sut_cpus": "0-5",
+  "k6_cpus": "6,7",
+  "degraus": [
+    {
+      "cenario": "busca",
+      "taxa_alvo_iter_s": 5,
+      "duracao_s": 20,
+      "rps": 5,
+      "iteracoes": 101,
+      "iteracoes_descartadas": 0,
+      "p50_ms": 243.293695,
+      "p95_ms": 2305.446136,
+      "p99_ms": 4712.11778,
+      "p95_pior_endpoint_ms": 2305.446136,
+      "erro": 0,
+      "bytes_recebidos_por_req": 3607.227722772277,
+      "bytes_enviados_por_req": 120.73267326732673,
+      "endpoints": {
+        "GET /marketplace/search": {
+          "requisicoes": 101,
+          "p50_ms": 243.293695,
+          "p95_ms": 2305.446136,
+          "p99_ms": 4712.11778,
+          "erro": 0
+        }
+      },
+      "pedidos": 0,
+      "requisicoes_por_pedido": null,
+      "tempo_do_pedido_p95_ms": null,
+      "cpu_ms_por_req": {
+        "commerce-api": 1.06,
+        "transaction-api": 0.088,
+        "control-plane-api": 0.132,
+        "worker": 4.839,
+        "postgres": 893.124,
+        "nats": 12.735,
+        "valkey": 2.568,
+        "dev-idp": 0,
+        "otel-collector": 0.338
+      },
+      "cpu_nucleos_medios": {
+        "commerce-api": 0.004,
+        "transaction-api": 0,
+        "control-plane-api": 0.001,
+        "worker": 0.02,
+        "postgres": 3.634,
+        "nats": 0.052,
+        "valkey": 0.01,
+        "dev-idp": 0,
+        "otel-collector": 0.001
+      },
+      "memoria_max_mb": {
+        "commerce-api": 71,
+        "transaction-api": 49.2,
+        "control-plane-api": 34.6,
+        "worker": 13.3,
+        "postgres": 4486.4,
+        "nats": 271.4,
+        "valkey": 3.9,
+        "dev-idp": 44.4,
+        "otel-collector": 33.1
+      },
+      "banco": {
+        "consultas_por_req": 25.77227722772277,
+        "tempo_banco_ms_por_req": 535.1820011683168,
+        "transacoes_por_req": 41.93069306930693,
+        "acerto_cache": 0.3895672348028726,
+        "blocos_lidos_disco": 2129126,
+        "wal_bytes_por_req": 0,
+        "wal_bytes_total": 0,
+        "crescimento_banco_bytes": 0,
+        "linhas_inseridas": 0,
+        "linhas_lidas_por_req": 339713.47524752474,
+        "conexoes_max": {
+          "transaction-api": 2,
+          "worker": 3,
+          "commerce-api": 10,
+          "control-plane-api": 2,
+          "local": 8
+        },
+        "top_consultas": [
+          {
+            "calls": 101,
+            "total_ms": 51285.5,
+            "media_ms": 507.777,
+            "query": "SELECT l.store_id, l.product_id, l.title, l.listed_at FROM listings.listings l WHERE l.listed AND l.search_vector @@ plainto_tsquery($4, $1:"
+          },
+          {
+            "calls": 13,
+            "total_ms": 2665.2,
+            "media_ms": 205.018,
+            "query": "SELECT t.source_id, t.rule_id, t.currency, COALESCE(sum(e.amount) FILTER (WHERE e.direction = 'debit'), 0)::bigint AS total, EXISTS (SELECT "
+          },
+          {
+            "calls": 2363,
+            "total_ms": 41.9,
+            "media_ms": 0.018,
+            "query": "SELECT id, organization_id, store_id, source_type, source_id, kind, status, currency, expected_amount, actual_amount, detail, opened_at, las"
+          },
+          {
+            "calls": 14,
+            "total_ms": 32.2,
+            "media_ms": 2.297,
+            "query": "SELECT p.id, p.organization_id, p.store_id, p.currency, p.status, p.captured_amount, p.refunded_amount, p.updated_at, EXISTS (SELECT 1 FROM "
+          },
+          {
+            "calls": 50,
+            "total_ms": 13.8,
+            "media_ms": 0.275,
+            "query": "UPDATE platform.outbox SET claimed_until = now() + make_interval(secs => $2), attempts = attempts + 1 WHERE id IN ( SELECT id FROM platform."
+          },
+          {
+            "calls": 1,
+            "total_ms": 4.9,
+            "media_ms": 4.865,
+            "query": "SELECT DISTINCT organization_id FROM payments.payments ORDER BY organization_id LIMIT $1"
+          }
+        ]
+      },
+      "fila": {
+        "outbox_pendente_inicio": 0,
+        "outbox_pendente_max": 0,
+        "nats_pendente_max": 0
+      },
+      "k6": {
+        "cpu_media_fracao": 0.003,
+        "cpu_pico_fracao": 0.006,
+        "nucleos": "6,7",
+        "saida": 0
+      },
+      "dentro_do_orcamento": false,
+      "motivos": [
+        "p95 2305.4 ms > 50 ms"
+      ]
+    }
+  ],
+  "medido_em": "2026-11-25T23:41:30.651Z"
+}
