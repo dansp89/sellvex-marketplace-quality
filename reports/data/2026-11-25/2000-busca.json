@@ -1,0 +1,165 @@
+{
+  "rotulo": "2000",
+  "cenario": "busca",
+  "classe": "public-read",
+  "orcamento_p95_ms": 50,
+  "rps_max_no_orcamento": 0,
+  "quebra": "p95 131.0 ms > 50 ms",
+  "gerador_saturou_antes": false,
+  "memoria_ociosa_mb": {
+    "dev-idp": 46.7,
+    "worker": 18.2,
+    "control-plane-api": 29.8,
+    "transaction-api": 85.7,
+    "commerce-api": 67.6,
+    "otel-collector": 35.1,
+    "postgres": 1184.2,
+    "nats": 256.5,
+    "valkey": 4.3,
+    "mailpit": 25.9
+  },
+  "conexoes_ociosas": {
+    "transaction-api": 10,
+    "commerce-api": 10,
+    "worker": 10,
+    "control-plane-api": 2,
+    "local": 1
+  },
+  "sut_cpus": "0-5",
+  "k6_cpus": "6,7",
+  "degraus": [
+    {
+      "cenario": "busca",
+      "taxa_alvo_iter_s": 5,
+      "duracao_s": 20,
+      "rps": 5,
+      "iteracoes": 101,
+      "iteracoes_descartadas": 0,
+      "p50_ms": 18.232156,
+      "p95_ms": 131.031164,
+      "p99_ms": 136.323346,
+      "p95_pior_endpoint_ms": 131.031164,
+      "erro": 0,
+      "bytes_recebidos_por_req": 3468.4752475247524,
+      "bytes_enviados_por_req": 120.29702970297029,
+      "endpoints": {
+        "GET /marketplace/search": {
+          "requisicoes": 101,
+          "p50_ms": 18.232156,
+          "p95_ms": 131.031164,
+          "p99_ms": 136.323346,
+          "erro": 0
+        }
+      },
+      "pedidos": 0,
+      "requisicoes_por_pedido": null,
+      "tempo_do_pedido_p95_ms": null,
+      "cpu_ms_por_req": {
+        "commerce-api": 1.227,
+        "transaction-api": 0.078,
+        "control-plane-api": 0.321,
+        "worker": 1.539,
+        "postgres": 46.098,
+        "nats": 10.595,
+        "valkey": 2.221,
+        "dev-idp": 0,
+        "otel-collector": 0.407
+      },
+      "cpu_nucleos_medios": {
+        "commerce-api": 0.006,
+        "transaction-api": 0,
+        "control-plane-api": 0.001,
+        "worker": 0.007,
+        "postgres": 0.214,
+        "nats": 0.049,
+        "valkey": 0.01,
+        "dev-idp": 0,
+        "otel-collector": 0.002
+      },
+      "memoria_max_mb": {
+        "commerce-api": 94.7,
+        "transaction-api": 48.9,
+        "control-plane-api": 28.6,
+        "worker": 18.5,
+        "postgres": 1050.1,
+        "nats": 259.2,
+        "valkey": 4.6,
+        "dev-idp": 46.7,
+        "otel-collector": 36.9
+      },
+      "banco": {
+        "consultas_por_req": 1.99009900990099,
+        "tempo_banco_ms_por_req": 20.674950148514846,
+        "transacoes_por_req": 36.7029702970297,
+        "acerto_cache": 0.9959418329387894,
+        "blocos_lidos_disco": 756,
+        "wal_bytes_por_req": 151.26732673267327,
+        "wal_bytes_total": 15278,
+        "crescimento_banco_bytes": 0,
+        "linhas_inseridas": 0,
+        "linhas_lidas_por_req": 2770.2772277227723,
+        "conexoes_max": {
+          "transaction-api": 10,
+          "commerce-api": 10,
+          "worker": 10,
+          "control-plane-api": 2,
+          "local": 1
+        },
+        "top_consultas": [
+          {
+            "calls": 101,
+            "total_ms": 2081.8,
+            "media_ms": 20.612,
+            "query": "SELECT l.store_id, l.product_id, l.title, l.listed_at FROM listings.listings l WHERE l.listed AND to_tsvector($4, l.search_text) @@ plainto_"
+          },
+          {
+            "calls": 22,
+            "total_ms": 1.6,
+            "media_ms": 0.073,
+            "query": "UPDATE webhooks.deliveries SET status = 'delivering', lease_until = $1, attempts = attempts + 1, updated_at = $2, version = version + 1 WHER"
+          },
+          {
+            "calls": 1,
+            "total_ms": 1.6,
+            "media_ms": 1.595,
+            "query": "SELECT p.id FROM payments.payments p WHERE ((p.status IN ('pending', 'unknown') AND p.updated_at <= $1::timestamptz) OR EXISTS (SELECT 1 FRO"
+          },
+          {
+            "calls": 45,
+            "total_ms": 1.5,
+            "media_ms": 0.032,
+            "query": "UPDATE platform.outbox SET claimed_until = now() + make_interval(secs => $2), attempts = attempts + 1 WHERE id IN ( SELECT id FROM platform."
+          },
+          {
+            "calls": 11,
+            "total_ms": 0.8,
+            "media_ms": 0.071,
+            "query": "UPDATE jobs.jobs SET status = 'running', lease_until = $1, attempts = attempts + 1, updated_at = $2, version = version + 1 WHERE id = ( SELE"
+          },
+          {
+            "calls": 19,
+            "total_ms": 0.6,
+            "media_ms": 0.032,
+            "query": "select count(*) from platform.outbox where published_at is null"
+          }
+        ]
+      },
+      "fila": {
+        "outbox_pendente_inicio": 0,
+        "outbox_pendente_max": 0,
+        "nats_pendente_max": 0
+      },
+      "k6": {
+        "cpu_media_fracao": 0.004,
+        "cpu_pico_fracao": 0.009,
+        "nucleos": "6,7",
+        "saida": 0
+      },
+      "dentro_do_orcamento": false,
+      "motivos": [
+        "p95 131.0 ms > 50 ms"
+      ]
+    }
+  ],
+  "medido_em": "2026-11-25T21:30:29.456Z"
+}
