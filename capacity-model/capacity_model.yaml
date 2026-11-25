@@ -27,4 +27,20 @@ measured:
 capacity_unit:
   definition: null   # DEC-CP-001 / DEC-INFRA-001: derived from the node benchmark
   per_node: null
-reports: []          # one entry per execution, pointing into reports/
+# Medido em bancada (notebook, não hardware alvo) — só custo unitário; não
+# vale como capacidade de produção. Fonte: reports/2026-11-25-k6-capacidade.md
+measured_bench_2026_11_25:
+  report: reports/2026-11-25-k6-capacidade.md
+  data: reports/data/2026-11-25/
+  hardware_reference: {sysbench_cpu_1_thread_events_s: 326.53, sysbench_cpu_8_threads_events_s: 1962.10, fio_randwrite_4k_iops: 6603}
+  dataset_stores: [200, 2000, 20000, 120000]      # lojas de carga, 19,2 produtos/loja
+  requests_per_order: [9.24, 9.78]               # DEC-PERF-003, faixa entre os degraus
+  orders_per_second_sustained_on_bench: 40       # p95 por etapa < 500 ms, esta máquina
+  db_bytes_per_store_19_products: 119636
+  db_bytes_per_product: 6231
+  db_bytes_per_order: [26734, 34980]            # degrau de referência; média de todos os degraus: 25083
+  wal_bytes_per_order: [58530, 83215]
+  db_pool_connections_per_instance: 10
+  search_p95_ms_by_stores: {200: 31.4, 2000: 131.0, 20000: 207.7, 120000: 5873.7}   # bloqueio: índice não usado
+reports:
+  - reports/2026-11-25-k6-capacidade.md
