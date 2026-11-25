@@ -82,9 +82,9 @@ function conexoes(mapa: Record<string, string>): Record<string, number> {
 }
 
 function dbStat() {
-  const [x, hit, read, tupr, tupf, tupi, tupu] = psql(`select xact_commit+xact_rollback, blks_hit, blks_read, tup_returned, tup_fetched, tup_inserted, tup_updated
-    from pg_stat_database where datname='sellvex'`).split("|").map(Number)
-  return { xact: x!, hit: hit!, read: read!, tup_returned: tupr!, tup_fetched: tupf!, tup_inserted: tupi!, tup_updated: tupu! }
+  const [x, hit, read, tupr, tupf, tupi, tupu, wal, size] = psql(`select xact_commit+xact_rollback, blks_hit, blks_read, tup_returned, tup_fetched, tup_inserted, tup_updated,
+    (select wal_bytes from pg_stat_wal), pg_database_size('sellvex') from pg_stat_database where datname='sellvex'`).split("|").map(Number)
+  return { xact: x!, hit: hit!, read: read!, tup_returned: tupr!, tup_fetched: tupf!, tup_inserted: tupi!, tup_updated: tupu!, wal: wal!, size: size! }
 }
 function statements() {
   const [calls, ms, rows] = psql(`select coalesce(sum(calls),0), coalesce(sum(total_exec_time),0), coalesce(sum(rows),0) from pg_stat_statements s
@@ -182,7 +182,9 @@ async function degrau(cen: string, taxa: number, ids: Record<string, string>, ma
       consultas_por_req: reqs ? st.calls / reqs : 0, tempo_banco_ms_por_req: reqs ? st.exec_ms / reqs : 0,
       transacoes_por_req: reqs ? (db1.xact - db0.xact) / reqs : 0,
       acerto_cache: (db1.hit - db0.hit) / Math.max(1, db1.hit - db0.hit + db1.read - db0.read),
-      blocos_lidos_disco: db1.read - db0.read, linhas_lidas_por_req: reqs ? (db1.tup_returned - db0.tup_returned) / reqs : 0,
+      blocos_lidos_disco: db1.read - db0.read,
+      wal_bytes_por_req: reqs ? (db1.wal - db0.wal) / reqs : 0, wal_bytes_total: db1.wal - db0.wal,
+      crescimento_banco_bytes: db1.size - db0.size, linhas_inseridas: db1.tup_inserted - db0.tup_inserted, linhas_lidas_por_req: reqs ? (db1.tup_returned - db0.tup_returned) / reqs : 0,
       conexoes_max: conn, top_consultas: st.top,
     },
     fila: { outbox_pendente_inicio: ob0, outbox_pendente_max: obMax, nats_pendente_max: natsMax },

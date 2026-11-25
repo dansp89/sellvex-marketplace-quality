@@ -1,0 +1,74 @@
+# ficha da máquina — 2026-11-25T17:01:15-04:00
+## cpu
+CPU(s):                                  8
+Thread(s) per núcleo:                    2
+CPU(s) de nó0 NUMA:                      0-7
+## memória
+               total       usada       livre    compart.  buff/cache  disponível
+Mem.:    25060601856  9796870144   301928448   539275264 14961803264 14313562112
+## disco
+NAME    MODEL                            SIZE ROTA TRAN
+zram0                                    256M    0 
+nvme0n1 WDC PC SN530 SDBPNPZ-512G-1014 476,9G    0 nvme
+/dev/nvme0n1p2  468G  389G   56G  88% /
+## sistema
+Linux 6.8.0-149-generic x86_64
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+docker: 29.4.2
+## sysbench cpu (1 thread e todas as threads, 30 s)
+    events per second:   326.53
+         95th percentile:                        3.25
+    events per second:  1962.10
+         95th percentile:                        6.79
+## sysbench memory (1 KiB blocos, 10 GiB, todas as threads)
+10240.00 MiB transferred (10832.92 MiB/sec)
+## fio (arquivo de 2 GB, direct=1, 30 s cada)
+randread-4k-qd32: 130329 IOPS, 509.1 MB/s, lat_p99 99.000000%=460 us
+randwrite-4k-qd32: 6603 IOPS, 25.8 MB/s, lat_p99 99.000000%=25559 us
+read-1m-qd8: 1336 IOPS, 1336.3 MB/s, lat_p99 99.000000%=9633 us
+write-1m-qd8: 146 IOPS, 146.4 MB/s, lat_p99 99.000000%=278921 us
+## cpu (LC_ALL=C, acrescentado)
+Model name:                              Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz
+Core(s) per socket:                      4
+Socket(s):                               1
+CPU max MHz:                             2500.0000
+CPU min MHz:                             800.0000
+L3 cache:                                8 MiB (1 instance)
+## versões
+postgres (PostgreSQL) 18.6
+go version go1.26.8 linux/amd64
+k6 v2.3.0+dirty (commit/e088784614-dirty, go1.27.1, linux/amd64)
+k6 imagem: grafana/k6:0.57.0 grafana/k6@sha256:70af91f86cd8e142e0544a4edaf79835a80033f71974b92edd5ac36fd4442a7b
+sysbench imagem: severalnines/sysbench@sha256:64cd003bfa21eaab22f985e7b95f90d21a970229f5f628718657dd1bae669abd
+## imagens da stack
+commerce-api sha256:15f3f10aa7f977278de1ae18b559c67d77e74455ae4bc91ee611cc4daad5243e
+transaction-api sha256:3674aa55745624cd44e49eb676aa627993c13f4e1a1a02c95bd9e3dcd03817a0
+control-plane-api sha256:db5360b0520407b1e5aa4b5456d1599612c5822ada68e59ec3ea1f67b4160b47
+worker sha256:948ccff229eb1ffc55b1782800419a6848d987194dd371bee533ef2c7d297940
+postgres sha256:b07129cc272f688c98f5b343138a0a52fa45b3d82f50d7a53ff441330624cd2e
+## repositórios (SHA no início da medição)
+sellvex-marketplace-app-admin 6966d89373f1570a8f8f68943ce53dca8051f0f8
+sellvex-marketplace-app-mobile d356e3ab2ba89faabc4a9a8781c5bbe1010b9817
+sellvex-marketplace-app-seller 5fa3d4befc7c2f219671debed4100d4f6fec5e1d
+sellvex-marketplace-app-shared 88cc696df6195b93f9e2851ec10760ccc069eca4
+sellvex-marketplace-app-store 9c46303f90a970a0321eb47c9f41f3aa21a1002d
+sellvex-marketplace-budget 3b5017a28dec3daa7bf3032c6b696eb5848cfd44
+sellvex-marketplace-contracts 1a81eee2f19bc8f9be130fb001dffe05025e5b19
+sellvex-marketplace-core ba7ca6c2b17425e65485bc419edb4914885c2f9a
+sellvex-marketplace-demo 2c75a9b9ea69d8c7126597faa598b70357876053
+sellvex-marketplace-devkit 9fbbb201c42b48e0e98ee22d1009e79c02b3b156
+sellvex-marketplace-extension-sdk-go 8ed7e77c1f07cc44bcc4ef606ce4b03ca057c259
+sellvex-marketplace-infrastructure 2ddcaf9b8a5d8cc9f03d070d59959f02148fc0d0
+sellvex-marketplace-kimai 668ea9b5ebed34ea3c4767c68ba3ab7cb1b79b80
+sellvex-marketplace-quality 789896073b0e2fa4f5c0ef0458eacd77e403b3bb
+sellvex-marketplace-specs e22bf62f989e5c3e0438e7ab42507d2aa44a1a39
+sellvex-marketplace-static 1550324187a36ca7af74ace56048cd92a921558e
+sellvex-marketplace-storefront 74b7edc7348e08ecb5654c6b364c2ee4f9e23454
+sellvex-marketplace-ui c5cd346158f3ca460b207fbe24549d1d56779fe8
+## postgres
+effective_cache_size=524288
+max_connections=100
+shared_buffers=16384
+shared_preload_libraries=pg_stat_statements
+synchronous_commit=on
+work_mem=4096
