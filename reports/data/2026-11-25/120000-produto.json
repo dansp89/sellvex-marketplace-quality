@@ -1,0 +1,172 @@
+{
+  "rotulo": "120000",
+  "cenario": "produto",
+  "classe": "public-read",
+  "orcamento_p95_ms": 50,
+  "rps_max_no_orcamento": 0,
+  "quebra": "gerador_saturado",
+  "gerador_saturou_antes": true,
+  "memoria_ociosa_mb": {
+    "dev-idp": 45.4,
+    "worker": 16.8,
+    "control-plane-api": 29.3,
+    "transaction-api": 48.7,
+    "commerce-api": 74.3,
+    "otel-collector": 31.2,
+    "postgres": 6546,
+    "nats": 208.5,
+    "valkey": 4.2,
+    "mailpit": 25.7
+  },
+  "conexoes_ociosas": {
+    "transaction-api": 2,
+    "commerce-api": 10,
+    "worker": 4,
+    "control-plane-api": 2,
+    "local": 1
+  },
+  "sut_cpus": "0-5",
+  "k6_cpus": "6,7",
+  "degraus": [
+    {
+      "cenario": "produto",
+      "taxa_alvo_iter_s": 50,
+      "duracao_s": 20,
+      "rps": 100.1,
+      "iteracoes": 1001,
+      "iteracoes_descartadas": 0,
+      "p50_ms": 3.2953694999999996,
+      "p95_ms": 7.2189666999999895,
+      "p99_ms": 10.10875191,
+      "p95_pior_endpoint_ms": 8.780572,
+      "erro": 0,
+      "bytes_recebidos_por_req": 8958.85064935065,
+      "bytes_enviados_por_req": 163,
+      "endpoints": {
+        "GET /storefronts/{id}/products": {
+          "requisicoes": 1001,
+          "p50_ms": 4.262379,
+          "p95_ms": 8.780572,
+          "p99_ms": 11.038617,
+          "erro": 0
+        },
+        "GET /storefronts/{id}/products/{pid}": {
+          "requisicoes": 1001,
+          "p50_ms": 1.988574,
+          "p95_ms": 2.78771,
+          "p99_ms": 4.286303,
+          "erro": 0
+        }
+      },
+      "pedidos": 0,
+      "requisicoes_por_pedido": null,
+      "tempo_do_pedido_p95_ms": null,
+      "cpu_ms_por_req": {
+        "commerce-api": 2.227,
+        "transaction-api": 0.005,
+        "control-plane-api": 0.012,
+        "worker": 0.353,
+        "postgres": 4.733,
+        "nats": 0.729,
+        "valkey": 0.137,
+        "dev-idp": 0,
+        "otel-collector": 0.021
+      },
+      "cpu_nucleos_medios": {
+        "commerce-api": 0.159,
+        "transaction-api": 0,
+        "control-plane-api": 0.001,
+        "worker": 0.025,
+        "postgres": 0.338,
+        "nats": 0.052,
+        "valkey": 0.01,
+        "dev-idp": 0,
+        "otel-collector": 0.001
+      },
+      "memoria_max_mb": {
+        "commerce-api": 66.8,
+        "transaction-api": 48.7,
+        "control-plane-api": 29.9,
+        "worker": 16.6,
+        "postgres": 6252.4,
+        "nats": 248.1,
+        "valkey": 4.4,
+        "dev-idp": 45.4,
+        "otel-collector": 35.6
+      },
+      "banco": {
+        "consultas_por_req": 11.875124875124875,
+        "tempo_banco_ms_por_req": 2.4942889530469525,
+        "transacoes_por_req": 11.697802197802197,
+        "acerto_cache": 0.9891734919552625,
+        "blocos_lidos_disco": 18514,
+        "wal_bytes_por_req": 0.024975024975024976,
+        "wal_bytes_total": 50,
+        "crescimento_banco_bytes": 0,
+        "linhas_inseridas": 0,
+        "linhas_lidas_por_req": 14482.292707292707,
+        "conexoes_max": {
+          "transaction-api": 2,
+          "commerce-api": 10,
+          "worker": 4,
+          "control-plane-api": 2,
+          "local": 1
+        },
+        "top_consultas": [
+          {
+            "calls": 21,
+            "total_ms": 3000.6,
+            "media_ms": 142.885,
+            "query": "SELECT t.source_id, t.rule_id, t.currency, COALESCE(sum(e.amount) FILTER (WHERE e.direction = 'debit'), 0)::bigint AS total, EXISTS (SELECT "
+          },
+          {
+            "calls": 2002,
+            "total_ms": 515.8,
+            "media_ms": 0.258,
+            "query": "SELECT e.variant_id, e.price_amount, l.id AS price_list_id, l.version AS price_list_version, l.priority FROM pricing.price_entries e JOIN pr"
+          },
+          {
+            "calls": 1001,
+            "total_ms": 450.2,
+            "media_ms": 0.45,
+            "query": "SELECT id, product_id, store_id, sku, title, created_at FROM catalog.variants WHERE store_id = $1 AND product_id = ANY($2::uuid[]) ORDER BY "
+          },
+          {
+            "calls": 2002,
+            "total_ms": 348.4,
+            "media_ms": 0.174,
+            "query": "SELECT p.variant_id, p.warehouse_id, w.priority, (p.on_hand - p.reserved)::bigint AS available FROM inventory.stock_positions p JOIN invento"
+          },
+          {
+            "calls": 2002,
+            "total_ms": 112.2,
+            "media_ms": 0.056,
+            "query": "SELECT product_id, category_id FROM catalog.product_categories WHERE store_id = $1 AND product_id = ANY($2::uuid[]) ORDER BY product_id, cat"
+          },
+          {
+            "calls": 1001,
+            "total_ms": 107,
+            "media_ms": 0.107,
+            "query": "SELECT id, store_id, organization_id, title, description, status, published_at, created_at, updated_at, version, brand FROM catalog.products"
+          }
+        ]
+      },
+      "fila": {
+        "outbox_pendente_inicio": 0,
+        "outbox_pendente_max": 0,
+        "nats_pendente_max": 0
+      },
+      "k6": {
+        "cpu_media_fracao": 0.195,
+        "cpu_pico_fracao": 0.999,
+        "nucleos": "6,7",
+        "saida": 0
+      },
+      "dentro_do_orcamento": false,
+      "motivos": [
+        "gerador_saturado"
+      ]
+    }
+  ],
+  "medido_em": "2026-11-25T22:36:53.733Z"
+}
