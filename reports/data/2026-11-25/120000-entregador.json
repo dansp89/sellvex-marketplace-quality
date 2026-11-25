@@ -3,25 +3,25 @@
   "cenario": "entregador",
   "classe": "transactional-write",
   "orcamento_p95_ms": 300,
-  "rps_max_no_orcamento": 0,
-  "quebra": "gerador_saturado",
-  "gerador_saturou_antes": true,
+  "rps_max_no_orcamento": 800.5,
+  "quebra": "p95 758.8 ms > 300 ms; descartadas 2053",
+  "gerador_saturou_antes": false,
   "memoria_ociosa_mb": {
     "dev-idp": 45.4,
-    "worker": 16.8,
-    "control-plane-api": 29.3,
-    "transaction-api": 48.7,
-    "commerce-api": 74.3,
-    "otel-collector": 31.2,
-    "postgres": 6546,
-    "nats": 208.5,
+    "worker": 18.2,
+    "control-plane-api": 28.5,
+    "transaction-api": 62.8,
+    "commerce-api": 63.9,
+    "otel-collector": 35.3,
+    "postgres": 6240.3,
+    "nats": 266.5,
     "valkey": 4.2,
     "mailpit": 25.7
   },
   "conexoes_ociosas": {
     "transaction-api": 2,
     "commerce-api": 10,
-    "worker": 4,
+    "worker": 10,
     "control-plane-api": 2,
     "local": 1
   },
@@ -35,19 +35,19 @@
       "rps": 50.5,
       "iteracoes": 1001,
       "iteracoes_descartadas": 0,
-      "p50_ms": 1.931075,
-      "p95_ms": 3.38679,
-      "p99_ms": 6.231596899999997,
-      "p95_pior_endpoint_ms": 3.358065,
+      "p50_ms": 1.89865,
+      "p95_ms": 2.953215,
+      "p99_ms": 4.7882148999999945,
+      "p95_pior_endpoint_ms": 2.887714,
       "erro": 0,
       "bytes_recebidos_por_req": 124.48862512363996,
-      "bytes_enviados_por_req": 1066.652818991098,
+      "bytes_enviados_por_req": 1066.605341246291,
       "endpoints": {
         "PUT /courier/location": {
           "requisicoes": 1001,
-          "p50_ms": 1.928418,
-          "p95_ms": 3.358065,
-          "p99_ms": 6.247453,
+          "p50_ms": 1.897451,
+          "p95_ms": 2.887714,
+          "p99_ms": 4.81315,
           "erro": 0
         }
       },
@@ -55,51 +55,51 @@
       "requisicoes_por_pedido": null,
       "tempo_do_pedido_p95_ms": null,
       "cpu_ms_por_req": {
-        "commerce-api": 0.011,
-        "transaction-api": 1.268,
-        "control-plane-api": 0.023,
-        "worker": 0.146,
-        "postgres": 3.503,
-        "nats": 1.416,
-        "valkey": 0.246,
-        "dev-idp": 0.027,
-        "otel-collector": 0.042
+        "commerce-api": 0.013,
+        "transaction-api": 1.246,
+        "control-plane-api": 0.012,
+        "worker": 0.344,
+        "postgres": 4.726,
+        "nats": 1.173,
+        "valkey": 0.211,
+        "dev-idp": 0.028,
+        "otel-collector": 0.037
       },
       "cpu_nucleos_medios": {
-        "commerce-api": 0,
-        "transaction-api": 0.046,
+        "commerce-api": 0.001,
+        "transaction-api": 0.055,
         "control-plane-api": 0.001,
-        "worker": 0.005,
-        "postgres": 0.127,
-        "nats": 0.051,
+        "worker": 0.015,
+        "postgres": 0.208,
+        "nats": 0.052,
         "valkey": 0.009,
         "dev-idp": 0.001,
         "otel-collector": 0.002
       },
       "memoria_max_mb": {
-        "commerce-api": 65.6,
-        "transaction-api": 63.1,
-        "control-plane-api": 28.7,
-        "worker": 19,
-        "postgres": 6239.9,
-        "nats": 335.4,
+        "commerce-api": 143.2,
+        "transaction-api": 103.6,
+        "control-plane-api": 28.5,
+        "worker": 18.7,
+        "postgres": 6948.3,
+        "nats": 275.5,
         "valkey": 4.4,
-        "dev-idp": 45.4,
-        "otel-collector": 35.3
+        "dev-idp": 46.3,
+        "otel-collector": 38
       },
       "banco": {
-        "consultas_por_req": 3.096933728981207,
-        "tempo_banco_ms_por_req": 0.18539264094955485,
-        "transacoes_por_req": 2.1859545004945597,
-        "acerto_cache": 0.9956959301221596,
-        "blocos_lidos_disco": 136,
-        "wal_bytes_por_req": 311.2927794263106,
-        "wal_bytes_total": 314717,
+        "consultas_por_req": 4.446092977250247,
+        "tempo_banco_ms_por_req": 2.1279398911968346,
+        "transacoes_por_req": 5.4955489614243325,
+        "acerto_cache": 0.9999586984391314,
+        "blocos_lidos_disco": 25,
+        "wal_bytes_por_req": 230.40751730959445,
+        "wal_bytes_total": 232942,
         "crescimento_banco_bytes": 0,
         "linhas_inseridas": 0,
-        "linhas_lidas_por_req": 36.67952522255193,
+        "linhas_lidas_por_req": 16347.385756676558,
         "conexoes_max": {
-          "transaction-api": 2,
+          "transaction-api": 10,
           "commerce-api": 10,
           "worker": 10,
           "control-plane-api": 2,
@@ -107,40 +107,40 @@
         },
         "top_consultas": [
           {
+            "calls": 7,
+            "total_ms": 1919.5,
+            "media_ms": 274.212,
+            "query": "SELECT t.source_id, t.rule_id, t.currency, COALESCE(sum(e.amount) FILTER (WHERE e.direction = 'debit'), 0)::bigint AS total, EXISTS (SELECT "
+          },
+          {
             "calls": 1001,
-            "total_ms": 86.8,
-            "media_ms": 0.087,
+            "total_ms": 85,
+            "media_ms": 0.085,
             "query": "UPDATE couriers.couriers SET full_name = $1, phone = $2, tax_id = $3, vehicle = $4, status = $5, reason = $6, online = $7, latitude = $8, lo"
           },
           {
             "calls": 1001,
-            "total_ms": 58.8,
-            "media_ms": 0.059,
+            "total_ms": 58.5,
+            "media_ms": 0.058,
             "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
           },
           {
             "calls": 1001,
-            "total_ms": 33.3,
-            "media_ms": 0.033,
+            "total_ms": 32.4,
+            "media_ms": 0.032,
             "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
           },
           {
-            "calls": 1,
-            "total_ms": 29.3,
-            "media_ms": 29.337,
-            "query": "DELETE FROM platform.outbox WHERE published_at IS NOT NULL AND published_at < now() - make_interval(secs => $1)"
+            "calls": 1373,
+            "total_ms": 29.4,
+            "media_ms": 0.021,
+            "query": "SELECT id, organization_id, store_id, source_type, source_id, kind, status, currency, expected_amount, actual_amount, detail, opened_at, las"
           },
           {
-            "calls": 2,
-            "total_ms": 3.7,
-            "media_ms": 1.866,
-            "query": "SELECT p.id FROM payments.payments p WHERE ((p.status IN ('pending', 'unknown') AND p.updated_at <= $1::timestamptz) OR EXISTS (SELECT 1 FRO"
-          },
-          {
-            "calls": 57,
-            "total_ms": 1.9,
-            "media_ms": 0.034,
-            "query": "UPDATE platform.outbox SET claimed_until = now() + make_interval(secs => $2), attempts = attempts + 1 WHERE id IN ( SELECT id FROM platform."
+            "calls": 6,
+            "total_ms": 18.2,
+            "media_ms": 3.028,
+            "query": "SELECT p.id, p.organization_id, p.store_id, p.currency, p.status, p.captured_amount, p.refunded_amount, p.updated_at, EXISTS (SELECT 1 FROM"
           }
         ]
       },
@@ -150,16 +150,667 @@
         "nats_pendente_max": 0
       },
       "k6": {
-        "cpu_media_fracao": 0.189,
-        "cpu_pico_fracao": 0.999,
+        "cpu_media_fracao": 0.014,
+        "cpu_pico_fracao": 0.019,
+        "nucleos": "6,7",
+        "saida": 0
+      },
+      "dentro_do_orcamento": true,
+      "motivos": []
+    },
+    {
+      "cenario": "entregador",
+      "taxa_alvo_iter_s": 100,
+      "duracao_s": 20,
+      "rps": 100.5,
+      "iteracoes": 2001,
+      "iteracoes_descartadas": 0,
+      "p50_ms": 1.656324,
+      "p95_ms": 2.2442865000000003,
+      "p99_ms": 3.183031000000022,
+      "p95_pior_endpoint_ms": 2.23418,
+      "erro": 0,
+      "bytes_recebidos_por_req": 120.26752859273994,
+      "bytes_enviados_por_req": 1070.6981601193436,
+      "endpoints": {
+        "PUT /courier/location": {
+          "requisicoes": 2001,
+          "p50_ms": 1.654251,
+          "p95_ms": 2.23418,
+          "p99_ms": 2.823604,
+          "erro": 0
+        }
+      },
+      "pedidos": 0,
+      "requisicoes_por_pedido": null,
+      "tempo_do_pedido_p95_ms": null,
+      "cpu_ms_por_req": {
+        "commerce-api": 0.004,
+        "transaction-api": 1.003,
+        "control-plane-api": 0.012,
+        "worker": 0.061,
+        "postgres": 1.839,
+        "nats": 0.54,
+        "valkey": 0.091,
+        "dev-idp": 0.015,
+        "otel-collector": 0.024
+      },
+      "cpu_nucleos_medios": {
+        "commerce-api": 0,
+        "transaction-api": 0.088,
+        "control-plane-api": 0.001,
+        "worker": 0.005,
+        "postgres": 0.161,
+        "nats": 0.047,
+        "valkey": 0.008,
+        "dev-idp": 0.001,
+        "otel-collector": 0.002
+      },
+      "memoria_max_mb": {
+        "commerce-api": 143.2,
+        "transaction-api": 69.8,
+        "control-plane-api": 28.5,
+        "worker": 18.7,
+        "postgres": 6952,
+        "nats": 275.5,
+        "valkey": 4.4,
+        "dev-idp": 46.4,
+        "otel-collector": 38
+      },
+      "banco": {
+        "consultas_por_req": 3.0377921432123323,
+        "tempo_banco_ms_por_req": 0.17154341173545487,
+        "transacoes_por_req": 2.065141720537046,
+        "acerto_cache": 0.819576181482327,
+        "blocos_lidos_disco": 8693,
+        "wal_bytes_por_req": 276.3689706613625,
+        "wal_bytes_total": 555778,
+        "crescimento_banco_bytes": 0,
+        "linhas_inseridas": 0,
+        "linhas_lidas_por_req": 319.13227250124316,
+        "conexoes_max": {
+          "transaction-api": 10,
+          "commerce-api": 10,
+          "worker": 10,
+          "control-plane-api": 2,
+          "local": 1
+        },
+        "top_consultas": [
+          {
+            "calls": 2001,
+            "total_ms": 153.6,
+            "media_ms": 0.077,
+            "query": "UPDATE couriers.couriers SET full_name = $1, phone = $2, tax_id = $3, vehicle = $4, status = $5, reason = $6, online = $7, latitude = $8, lo"
+          },
+          {
+            "calls": 2001,
+            "total_ms": 89.8,
+            "media_ms": 0.045,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 2001,
+            "total_ms": 55.5,
+            "media_ms": 0.028,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 1,
+            "total_ms": 35.5,
+            "media_ms": 35.492,
+            "query": "SELECT store_id, organization_id, module_id, module_version, status, retention_until, created_at, updated_at, version FROM controlplane.modu"
+          },
+          {
+            "calls": 1,
+            "total_ms": 28.7,
+            "media_ms": 28.735,
+            "query": "DELETE FROM platform.outbox WHERE published_at IS NOT NULL AND published_at < now() - make_interval(secs => $1)"
+          },
+          {
+            "calls": 2,
+            "total_ms": 5.1,
+            "media_ms": 2.567,
+            "query": "SELECT p.id FROM payments.payments p WHERE ((p.status IN ('pending', 'unknown') AND p.updated_at <= $1::timestamptz) OR EXISTS (SELECT 1 FRO"
+          }
+        ]
+      },
+      "fila": {
+        "outbox_pendente_inicio": 0,
+        "outbox_pendente_max": 0,
+        "nats_pendente_max": 0
+      },
+      "k6": {
+        "cpu_media_fracao": 0.024,
+        "cpu_pico_fracao": 0.031,
+        "nucleos": "6,7",
+        "saida": 0
+      },
+      "dentro_do_orcamento": true,
+      "motivos": []
+    },
+    {
+      "cenario": "entregador",
+      "taxa_alvo_iter_s": 200,
+      "duracao_s": 20,
+      "rps": 200.6,
+      "iteracoes": 4001,
+      "iteracoes_descartadas": 0,
+      "p50_ms": 1.656908,
+      "p95_ms": 2.4934385,
+      "p99_ms": 5.430660400000003,
+      "p95_pior_endpoint_ms": 2.48512,
+      "erro": 0,
+      "bytes_recebidos_por_req": 118.13961605584642,
+      "bytes_enviados_por_req": 1072.9449015208177,
+      "endpoints": {
+        "PUT /courier/location": {
+          "requisicoes": 4001,
+          "p50_ms": 1.656104,
+          "p95_ms": 2.48512,
+          "p99_ms": 5.434167,
+          "erro": 0
+        }
+      },
+      "pedidos": 0,
+      "requisicoes_por_pedido": null,
+      "tempo_do_pedido_p95_ms": null,
+      "cpu_ms_por_req": {
+        "commerce-api": 0.001,
+        "transaction-api": 0.959,
+        "control-plane-api": 0.002,
+        "worker": 0.201,
+        "postgres": 2.595,
+        "nats": 0.285,
+        "valkey": 0.046,
+        "dev-idp": 0.007,
+        "otel-collector": 0.014
+      },
+      "cpu_nucleos_medios": {
+        "commerce-api": 0,
+        "transaction-api": 0.174,
+        "control-plane-api": 0,
+        "worker": 0.036,
+        "postgres": 0.47,
+        "nats": 0.052,
+        "valkey": 0.008,
+        "dev-idp": 0.001,
+        "otel-collector": 0.003
+      },
+      "memoria_max_mb": {
+        "commerce-api": 143.2,
+        "transaction-api": 69.4,
+        "control-plane-api": 28.5,
+        "worker": 18.6,
+        "postgres": 6939,
+        "nats": 275.5,
+        "valkey": 4.4,
+        "dev-idp": 46.4,
+        "otel-collector": 37.7
+      },
+      "banco": {
+        "consultas_por_req": 4.009473946646722,
+        "tempo_banco_ms_por_req": 1.4584857875841433,
+        "transacoes_por_req": 2.9705809025180754,
+        "acerto_cache": 1,
+        "blocos_lidos_disco": 0,
+        "wal_bytes_por_req": 223.48167539267016,
+        "wal_bytes_total": 896385,
+        "crescimento_banco_bytes": 0,
+        "linhas_inseridas": 0,
+        "linhas_lidas_por_req": 10275.354525056096,
+        "conexoes_max": {
+          "transaction-api": 10,
+          "commerce-api": 10,
+          "worker": 8,
+          "control-plane-api": 2,
+          "local": 1
+        },
+        "top_consultas": [
+          {
+            "calls": 21,
+            "total_ms": 5092.9,
+            "media_ms": 242.519,
+            "query": "SELECT t.source_id, t.rule_id, t.currency, COALESCE(sum(e.amount) FILTER (WHERE e.direction = 'debit'), 0)::bigint AS total, EXISTS (SELECT "
+          },
+          {
+            "calls": 4001,
+            "total_ms": 317.9,
+            "media_ms": 0.079,
+            "query": "UPDATE couriers.couriers SET full_name = $1, phone = $2, tax_id = $3, vehicle = $4, status = $5, reason = $6, online = $7, latitude = $8, lo"
+          },
+          {
+            "calls": 4001,
+            "total_ms": 183.9,
+            "media_ms": 0.046,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 4001,
+            "total_ms": 111.3,
+            "media_ms": 0.028,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 3936,
+            "total_ms": 81.8,
+            "media_ms": 0.021,
+            "query": "SELECT id, organization_id, store_id, source_type, source_id, kind, status, currency, expected_amount, actual_amount, detail, opened_at, las"
+          },
+          {
+            "calls": 21,
+            "total_ms": 52.3,
+            "media_ms": 2.492,
+            "query": "SELECT p.id, p.organization_id, p.store_id, p.currency, p.status, p.captured_amount, p.refunded_amount, p.updated_at, EXISTS (SELECT 1 FROM"
+          }
+        ]
+      },
+      "fila": {
+        "outbox_pendente_inicio": 0,
+        "outbox_pendente_max": 0,
+        "nats_pendente_max": 0
+      },
+      "k6": {
+        "cpu_media_fracao": 0.044,
+        "cpu_pico_fracao": 0.062,
+        "nucleos": "6,7",
+        "saida": 0
+      },
+      "dentro_do_orcamento": true,
+      "motivos": []
+    },
+    {
+      "cenario": "entregador",
+      "taxa_alvo_iter_s": 400,
+      "duracao_s": 20,
+      "rps": 400.6,
+      "iteracoes": 8001,
+      "iteracoes_descartadas": 0,
+      "p50_ms": 1.456408,
+      "p95_ms": 2.1890025,
+      "p99_ms": 4.6103217999999915,
+      "p95_pior_endpoint_ms": 2.169508,
+      "erro": 0,
+      "bytes_recebidos_por_req": 117.07127699413307,
+      "bytes_enviados_por_req": 1074.4929471976034,
+      "endpoints": {
+        "PUT /courier/location": {
+          "requisicoes": 8001,
+          "p50_ms": 1.456246,
+          "p95_ms": 2.169508,
+          "p99_ms": 4.612518,
+          "erro": 0
+        }
+      },
+      "pedidos": 0,
+      "requisicoes_por_pedido": null,
+      "tempo_do_pedido_p95_ms": null,
+      "cpu_ms_por_req": {
+        "commerce-api": 0.001,
+        "transaction-api": 0.843,
+        "control-plane-api": 0.001,
+        "worker": 0.016,
+        "postgres": 0.828,
+        "nats": 0.159,
+        "valkey": 0.028,
+        "dev-idp": 0.003,
+        "otel-collector": 0.013
+      },
+      "cpu_nucleos_medios": {
+        "commerce-api": 0,
+        "transaction-api": 0.292,
+        "control-plane-api": 0,
+        "worker": 0.005,
+        "postgres": 0.287,
+        "nats": 0.055,
+        "valkey": 0.01,
+        "dev-idp": 0.001,
+        "otel-collector": 0.005
+      },
+      "memoria_max_mb": {
+        "commerce-api": 143.2,
+        "transaction-api": 77.2,
+        "control-plane-api": 28.5,
+        "worker": 17.8,
+        "postgres": 6939.3,
+        "nats": 278.4,
+        "valkey": 4.4,
+        "dev-idp": 46.5,
+        "otel-collector": 37.7
+      },
+      "banco": {
+        "consultas_por_req": 3.0094869554362753,
+        "tempo_banco_ms_por_req": 0.13854803657471002,
+        "transacoes_por_req": 1.9403320434402695,
+        "acerto_cache": 0.9999895601699604,
+        "blocos_lidos_disco": 1,
+        "wal_bytes_por_req": 223.73698664336538,
+        "wal_bytes_total": 1792357,
+        "crescimento_banco_bytes": 0,
+        "linhas_inseridas": 0,
+        "linhas_lidas_por_req": 7.245287729372113,
+        "conexoes_max": {
+          "transaction-api": 10,
+          "commerce-api": 10,
+          "worker": 8,
+          "control-plane-api": 2,
+          "local": 1
+        },
+        "top_consultas": [
+          {
+            "calls": 8001,
+            "total_ms": 574,
+            "media_ms": 0.072,
+            "query": "UPDATE couriers.couriers SET full_name = $1, phone = $2, tax_id = $3, vehicle = $4, status = $5, reason = $6, online = $7, latitude = $8, lo"
+          },
+          {
+            "calls": 8001,
+            "total_ms": 295.9,
+            "media_ms": 0.037,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 8001,
+            "total_ms": 229.4,
+            "media_ms": 0.029,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 2,
+            "total_ms": 5,
+            "media_ms": 2.524,
+            "query": "SELECT p.id FROM payments.payments p WHERE ((p.status IN ('pending', 'unknown') AND p.updated_at <= $1::timestamptz) OR EXISTS (SELECT 1 FRO"
+          },
+          {
+            "calls": 8011,
+            "total_ms": 5,
+            "media_ms": 0.001,
+            "query": "begin"
+          },
+          {
+            "calls": 20,
+            "total_ms": 4,
+            "media_ms": 0.2,
+            "query": "select count(*) from platform.outbox where published_at is null"
+          }
+        ]
+      },
+      "fila": {
+        "outbox_pendente_inicio": 0,
+        "outbox_pendente_max": 0,
+        "nats_pendente_max": 0
+      },
+      "k6": {
+        "cpu_media_fracao": 0.074,
+        "cpu_pico_fracao": 0.087,
+        "nucleos": "6,7",
+        "saida": 0
+      },
+      "dentro_do_orcamento": true,
+      "motivos": []
+    },
+    {
+      "cenario": "entregador",
+      "taxa_alvo_iter_s": 800,
+      "duracao_s": 20,
+      "rps": 800.5,
+      "iteracoes": 16000,
+      "iteracoes_descartadas": 0,
+      "p50_ms": 1.6852070000000001,
+      "p95_ms": 15.672814049999992,
+      "p99_ms": 84.76067499999999,
+      "p95_pior_endpoint_ms": 15.677297949999996,
+      "erro": 0,
+      "bytes_recebidos_por_req": 116.53603997501561,
+      "bytes_enviados_por_req": 1075.2637726420987,
+      "endpoints": {
+        "PUT /courier/location": {
+          "requisicoes": 16000,
+          "p50_ms": 1.6847875,
+          "p95_ms": 15.677297949999996,
+          "p99_ms": 84.76201812000002,
+          "erro": 0
+        }
+      },
+      "pedidos": 0,
+      "requisicoes_por_pedido": null,
+      "tempo_do_pedido_p95_ms": null,
+      "cpu_ms_por_req": {
+        "commerce-api": 0,
+        "transaction-api": 0.883,
+        "control-plane-api": 0.001,
+        "worker": 0.043,
+        "postgres": 1.069,
+        "nats": 0.077,
+        "valkey": 0.012,
+        "dev-idp": 0.002,
+        "otel-collector": 0.011
+      },
+      "cpu_nucleos_medios": {
+        "commerce-api": 0,
+        "transaction-api": 0.595,
+        "control-plane-api": 0,
+        "worker": 0.029,
+        "postgres": 0.72,
+        "nats": 0.052,
+        "valkey": 0.008,
+        "dev-idp": 0.001,
+        "otel-collector": 0.007
+      },
+      "memoria_max_mb": {
+        "commerce-api": 143.2,
+        "transaction-api": 89.9,
+        "control-plane-api": 28.5,
+        "worker": 18,
+        "postgres": 6942.1,
+        "nats": 277.9,
+        "valkey": 4.2,
+        "dev-idp": 46.5,
+        "otel-collector": 36.5
+      },
+      "banco": {
+        "consultas_por_req": 3.1916926920674578,
+        "tempo_banco_ms_por_req": 0.7416138188632106,
+        "transacoes_por_req": 2.2088694565896314,
+        "acerto_cache": 0.9947130724417794,
+        "blocos_lidos_disco": 6565,
+        "wal_bytes_por_req": 236.12236102435978,
+        "wal_bytes_total": 3780319,
+        "crescimento_banco_bytes": 0,
+        "linhas_inseridas": 0,
+        "linhas_lidas_por_req": 1942.3202998126171,
+        "conexoes_max": {
+          "transaction-api": 10,
+          "commerce-api": 10,
+          "worker": 8,
+          "control-plane-api": 2,
+          "local": 1
+        },
+        "top_consultas": [
+          {
+            "calls": 16000,
+            "total_ms": 5515.8,
+            "media_ms": 0.345,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 17,
+            "total_ms": 4457.3,
+            "media_ms": 262.192,
+            "query": "SELECT t.source_id, t.rule_id, t.currency, COALESCE(sum(e.amount) FILTER (WHERE e.direction = 'debit'), 0)::bigint AS total, EXISTS (SELECT "
+          },
+          {
+            "calls": 16000,
+            "total_ms": 1350,
+            "media_ms": 0.084,
+            "query": "UPDATE couriers.couriers SET full_name = $1, phone = $2, tax_id = $3, vehicle = $4, status = $5, reason = $6, online = $7, latitude = $8, lo"
+          },
+          {
+            "calls": 16000,
+            "total_ms": 695.1,
+            "media_ms": 0.043,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 3157,
+            "total_ms": 70,
+            "media_ms": 0.022,
+            "query": "SELECT id, organization_id, store_id, source_type, source_id, kind, status, currency, expected_amount, actual_amount, detail, opened_at, las"
+          },
+          {
+            "calls": 18,
+            "total_ms": 55.2,
+            "media_ms": 3.068,
+            "query": "SELECT p.id, p.organization_id, p.store_id, p.currency, p.status, p.captured_amount, p.refunded_amount, p.updated_at, EXISTS (SELECT 1 FROM"
+          }
+        ]
+      },
+      "fila": {
+        "outbox_pendente_inicio": 0,
+        "outbox_pendente_max": 0,
+        "nats_pendente_max": 0
+      },
+      "k6": {
+        "cpu_media_fracao": 0.15,
+        "cpu_pico_fracao": 0.172,
+        "nucleos": "6,7",
+        "saida": 0
+      },
+      "dentro_do_orcamento": true,
+      "motivos": []
+    },
+    {
+      "cenario": "entregador",
+      "taxa_alvo_iter_s": 1500,
+      "duracao_s": 20,
+      "rps": 1398,
+      "iteracoes": 27949,
+      "iteracoes_descartadas": 2053,
+      "p50_ms": 3.011437,
+      "p95_ms": 758.7654899,
+      "p99_ms": 793.2973393399999,
+      "p95_pior_endpoint_ms": 758.7806394,
+      "erro": 0,
+      "bytes_recebidos_por_req": 116.3069494617118,
+      "bytes_enviados_por_req": 1075.5738402661038,
+      "endpoints": {
+        "PUT /courier/location": {
+          "requisicoes": 27949,
+          "p50_ms": 3.013552,
+          "p95_ms": 758.7806394,
+          "p99_ms": 793.30166204,
+          "erro": 0
+        }
+      },
+      "pedidos": 0,
+      "requisicoes_por_pedido": null,
+      "tempo_do_pedido_p95_ms": null,
+      "cpu_ms_por_req": {
+        "commerce-api": 0.023,
+        "transaction-api": 0.899,
+        "control-plane-api": 0,
+        "worker": 0.01,
+        "postgres": 0.874,
+        "nats": 0.045,
+        "valkey": 0.008,
+        "dev-idp": 0.001,
+        "otel-collector": 0.011
+      },
+      "cpu_nucleos_medios": {
+        "commerce-api": 0.027,
+        "transaction-api": 1.049,
+        "control-plane-api": 0,
+        "worker": 0.012,
+        "postgres": 1.019,
+        "nats": 0.052,
+        "valkey": 0.009,
+        "dev-idp": 0.001,
+        "otel-collector": 0.012
+      },
+      "memoria_max_mb": {
+        "commerce-api": 143.2,
+        "transaction-api": 128.9,
+        "control-plane-api": 28.5,
+        "worker": 18,
+        "postgres": 6940.8,
+        "nats": 280.1,
+        "valkey": 4.2,
+        "dev-idp": 46.6,
+        "otel-collector": 37.3
+      },
+      "banco": {
+        "consultas_por_req": 3.0869129797203048,
+        "tempo_banco_ms_por_req": 1.27839207031725,
+        "transacoes_por_req": 2.10186344289853,
+        "acerto_cache": 0.9999171502570143,
+        "blocos_lidos_disco": 69,
+        "wal_bytes_por_req": 232.05990915268785,
+        "wal_bytes_total": 6488163,
+        "crescimento_banco_bytes": 0,
+        "linhas_inseridas": 0,
+        "linhas_lidas_por_req": 383.7255624307021,
+        "conexoes_max": {
+          "transaction-api": 10,
+          "commerce-api": 10,
+          "worker": 8,
+          "control-plane-api": 2,
+          "local": 1
+        },
+        "top_consultas": [
+          {
+            "calls": 27949,
+            "total_ms": 29923.7,
+            "media_ms": 1.071,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 27949,
+            "total_ms": 2849.9,
+            "media_ms": 0.102,
+            "query": "UPDATE couriers.couriers SET full_name = $1, phone = $2, tax_id = $3, vehicle = $4, status = $5, reason = $6, online = $7, latitude = $8, lo"
+          },
+          {
+            "calls": 27949,
+            "total_ms": 1367.9,
+            "media_ms": 0.049,
+            "query": "SELECT id, subject, full_name, phone, tax_id, vehicle, status, reason, online, latitude, longitude, last_seen_at, refusals, created_at, upda"
+          },
+          {
+            "calls": 4,
+            "total_ms": 983.3,
+            "media_ms": 245.835,
+            "query": "SELECT t.source_id, t.rule_id, t.currency, COALESCE(sum(e.amount) FILTER (WHERE e.direction = 'debit'), 0)::bigint AS total, EXISTS (SELECT "
+          },
+          {
+            "calls": 2,
+            "total_ms": 190.7,
+            "media_ms": 95.35,
+            "query": "SELECT id, organization_id, account_id, name, country, default_locale, timezone, default_currency, home_region, status, cell_id, created_at,"
+          },
+          {
+            "calls": 120,
+            "total_ms": 109.2,
+            "media_ms": 0.91,
+            "query": "SELECT e.variant_id, e.price_amount, l.id AS price_list_id, l.version AS price_list_version, l.priority FROM pricing.price_entries e JOIN pr"
+          }
+        ]
+      },
+      "fila": {
+        "outbox_pendente_inicio": 0,
+        "outbox_pendente_max": 0,
+        "nats_pendente_max": 0
+      },
+      "k6": {
+        "cpu_media_fracao": 0.27,
+        "cpu_pico_fracao": 0.298,
         "nucleos": "6,7",
         "saida": 0
       },
       "dentro_do_orcamento": false,
       "motivos": [
-        "gerador_saturado"
+        "p95 758.8 ms > 300 ms",
+        "descartadas 2053"
       ]
     }
   ],
-  "medido_em": "2026-11-25T22:40:38.172Z"
+  "medido_em": "2026-11-25T22:54:14.321Z"
 }

@@ -4,24 +4,24 @@
   "classe": "public-read",
   "orcamento_p95_ms": 50,
   "rps_max_no_orcamento": 0,
-  "quebra": "p95 1122.6 ms > 50 ms",
+  "quebra": "p95 5873.7 ms > 50 ms; descartadas 5",
   "gerador_saturou_antes": false,
   "memoria_ociosa_mb": {
     "dev-idp": 45.4,
-    "worker": 16.8,
-    "control-plane-api": 29.3,
-    "transaction-api": 48.7,
-    "commerce-api": 74.3,
-    "otel-collector": 31.2,
-    "postgres": 6546,
-    "nats": 208.5,
+    "worker": 18.2,
+    "control-plane-api": 28.5,
+    "transaction-api": 62.8,
+    "commerce-api": 63.9,
+    "otel-collector": 35.3,
+    "postgres": 6240.3,
+    "nats": 266.5,
     "valkey": 4.2,
     "mailpit": 25.7
   },
   "conexoes_ociosas": {
     "transaction-api": 2,
     "commerce-api": 10,
-    "worker": 4,
+    "worker": 10,
     "control-plane-api": 2,
     "local": 1
   },
@@ -32,22 +32,22 @@
       "cenario": "busca",
       "taxa_alvo_iter_s": 5,
       "duracao_s": 20,
-      "rps": 5,
-      "iteracoes": 101,
-      "iteracoes_descartadas": 0,
-      "p50_ms": 498.939352,
-      "p95_ms": 1122.589037,
-      "p99_ms": 8049.871807,
-      "p95_pior_endpoint_ms": 1122.589037,
+      "rps": 4.8,
+      "iteracoes": 96,
+      "iteracoes_descartadas": 5,
+      "p50_ms": 1120.457147,
+      "p95_ms": 5873.6976225,
+      "p99_ms": 18254.845741149995,
+      "p95_pior_endpoint_ms": 5873.6976225,
       "erro": 0,
-      "bytes_recebidos_por_req": 3206.6732673267325,
-      "bytes_enviados_por_req": 120.08910891089108,
+      "bytes_recebidos_por_req": 3495.0416666666665,
+      "bytes_enviados_por_req": 120.91666666666667,
       "endpoints": {
         "GET /marketplace/search": {
-          "requisicoes": 101,
-          "p50_ms": 498.939352,
-          "p95_ms": 1122.589037,
-          "p99_ms": 8049.871807,
+          "requisicoes": 96,
+          "p50_ms": 1120.457147,
+          "p95_ms": 5873.6976225,
+          "p99_ms": 18254.845741149995,
           "erro": 0
         }
       },
@@ -55,92 +55,92 @@
       "requisicoes_por_pedido": null,
       "tempo_do_pedido_p95_ms": null,
       "cpu_ms_por_req": {
-        "commerce-api": 1.293,
-        "transaction-api": 0.147,
-        "control-plane-api": 0.146,
-        "worker": 1.608,
-        "postgres": 1071.518,
-        "nats": 16.084,
-        "valkey": 3.069,
-        "dev-idp": 0.116,
-        "otel-collector": 0.492
+        "commerce-api": 6.309,
+        "transaction-api": 0.174,
+        "control-plane-api": 0.336,
+        "worker": 1.764,
+        "postgres": 1443.945,
+        "nats": 17.706,
+        "valkey": 3.788,
+        "dev-idp": 0,
+        "otel-collector": 0.457
       },
       "cpu_nucleos_medios": {
-        "commerce-api": 0.004,
-        "transaction-api": 0,
-        "control-plane-api": 0,
+        "commerce-api": 0.019,
+        "transaction-api": 0.001,
+        "control-plane-api": 0.001,
         "worker": 0.005,
-        "postgres": 3.501,
-        "nats": 0.053,
-        "valkey": 0.01,
+        "postgres": 4.416,
+        "nats": 0.054,
+        "valkey": 0.012,
         "dev-idp": 0,
-        "otel-collector": 0.002
+        "otel-collector": 0.001
       },
       "memoria_max_mb": {
-        "commerce-api": 64.7,
-        "transaction-api": 48.7,
-        "control-plane-api": 29.9,
-        "worker": 16.6,
-        "postgres": 6354.4,
-        "nats": 248.7,
+        "commerce-api": 99.6,
+        "transaction-api": 50.6,
+        "control-plane-api": 28.5,
+        "worker": 18.4,
+        "postgres": 6917.9,
+        "nats": 263.7,
         "valkey": 4.4,
         "dev-idp": 45.4,
-        "otel-collector": 35.8
+        "otel-collector": 37.3
       },
       "banco": {
-        "consultas_por_req": 2.4158415841584158,
-        "tempo_banco_ms_por_req": 591.4642557227721,
-        "transacoes_por_req": 17.15841584158416,
-        "acerto_cache": 0.7873162364460655,
-        "blocos_lidos_disco": 1314824,
-        "wal_bytes_por_req": 133.30693069306932,
-        "wal_bytes_total": 13464,
+        "consultas_por_req": 18.78125,
+        "tempo_banco_ms_por_req": 1873.4032677916666,
+        "transacoes_por_req": 56.447916666666664,
+        "acerto_cache": 0.9047283912276313,
+        "blocos_lidos_disco": 1262059,
+        "wal_bytes_por_req": 243.07291666666666,
+        "wal_bytes_total": 23335,
         "crescimento_banco_bytes": 0,
         "linhas_inseridas": 0,
-        "linhas_lidas_por_req": 88784.93069306931,
+        "linhas_lidas_por_req": 122971.54166666667,
         "conexoes_max": {
           "transaction-api": 2,
           "commerce-api": 10,
-          "worker": 4,
+          "worker": 10,
           "control-plane-api": 2,
-          "local": 7
+          "local": 8
         },
         "top_consultas": [
           {
-            "calls": 101,
-            "total_ms": 59724.5,
-            "media_ms": 591.332,
+            "calls": 96,
+            "total_ms": 179260.9,
+            "media_ms": 1867.301,
             "query": "SELECT l.store_id, l.product_id, l.title, l.listed_at FROM listings.listings l WHERE l.listed AND to_tsvector($4, l.search_text) @@ plainto_"
           },
           {
             "calls": 2,
-            "total_ms": 5.6,
-            "media_ms": 2.784,
-            "query": "SELECT p.id FROM payments.payments p WHERE ((p.status IN ('pending', 'unknown') AND p.updated_at <= $1::timestamptz) OR EXISTS (SELECT 1 FRO"
+            "total_ms": 277.2,
+            "media_ms": 138.589,
+            "query": "SELECT id, organization_id, account_id, name, country, default_locale, timezone, default_currency, home_region, status, cell_id, created_at,"
           },
           {
-            "calls": 62,
-            "total_ms": 3.2,
-            "media_ms": 0.052,
-            "query": "UPDATE platform.outbox SET claimed_until = now() + make_interval(secs => $2), attempts = attempts + 1 WHERE id IN ( SELECT id FROM platform."
+            "calls": 120,
+            "total_ms": 80.1,
+            "media_ms": 0.667,
+            "query": "SELECT e.variant_id, e.price_amount, l.id AS price_list_id, l.version AS price_list_version, l.priority FROM pricing.price_entries e JOIN pr"
           },
           {
-            "calls": 31,
-            "total_ms": 1.8,
-            "media_ms": 0.056,
-            "query": "UPDATE webhooks.deliveries SET status = 'delivering', lease_until = $1, attempts = attempts + 1, updated_at = $2, version = version + 1 WHER"
+            "calls": 120,
+            "total_ms": 73.4,
+            "media_ms": 0.612,
+            "query": "SELECT id, product_id, store_id, sku, title, created_at FROM catalog.variants WHERE store_id = $1 AND product_id = ANY($2::uuid[]) ORDER BY "
           },
           {
-            "calls": 16,
-            "total_ms": 0.9,
-            "media_ms": 0.056,
-            "query": "UPDATE jobs.jobs SET status = 'running', lease_until = $1, attempts = attempts + 1, updated_at = $2, version = version + 1 WHERE id = ( SELE"
+            "calls": 120,
+            "total_ms": 41.3,
+            "media_ms": 0.344,
+            "query": "SELECT p.variant_id, p.warehouse_id, w.priority, (p.on_hand - p.reserved)::bigint AS available FROM inventory.stock_positions p JOIN invento"
           },
           {
-            "calls": 25,
-            "total_ms": 0.9,
-            "media_ms": 0.034,
-            "query": "select count(*) from platform.outbox where published_at is null"
+            "calls": 120,
+            "total_ms": 25.5,
+            "media_ms": 0.212,
+            "query": "SELECT id, store_id, organization_id, title, description, status, published_at, created_at, updated_at, version, brand FROM catalog.products"
           }
         ]
       },
@@ -150,16 +150,17 @@
         "nats_pendente_max": 0
       },
       "k6": {
-        "cpu_media_fracao": 0.026,
-        "cpu_pico_fracao": 0.059,
+        "cpu_media_fracao": 0.003,
+        "cpu_pico_fracao": 0.006,
         "nucleos": "6,7",
         "saida": 0
       },
       "dentro_do_orcamento": false,
       "motivos": [
-        "p95 1122.6 ms > 50 ms"
+        "p95 5873.7 ms > 50 ms",
+        "descartadas 5"
       ]
     }
   ],
-  "medido_em": "2026-11-25T22:37:25.257Z"
+  "medido_em": "2026-11-25T22:44:27.960Z"
 }
