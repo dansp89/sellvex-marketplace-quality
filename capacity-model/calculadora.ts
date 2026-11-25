@@ -87,7 +87,17 @@ const pedidosLojaDia = flag("pedidos-loja-dia", 5)
 const visitasLojaDia = flag("visitas-loja-dia", 200)
 const pico = flag("pico", 3)
 const produtosLoja = flag("produtos-loja", 1000)
-const vcpu = flag("vcpu", 8), ram = flag("ram", 16)
+/* --enxuto: política de entrada pedida pelo usuário — o menor servidor que
+   aguenta o pico (1 nó no mínimo) e o balanceador dobra (×2), para um poder
+   cair ou ser atualizado. Tamanhos escolhidos na escada 2/4/8/16 vCPU com
+   4 GB por vCPU (família m7g). Sem a flag, vale a topologia de DEC-INFRA-001
+   (3 nós de app, 2 de worker, banco de 16 vCPU). */
+const ENXUTO = args.includes("--enxuto")
+const ESCADA = [2, 4, 8, 16]
+const vcpuFixo = ENXUTO && !args.includes("--vcpu") ? 0 : flag("vcpu", 8)
+let vcpu = vcpuFixo || 2, ram = ENXUTO && !args.includes("--ram") ? 0 : flag("ram", 16)
+const fatorLb = flag("fator-lb", ENXUTO ? 2 : 1)
+const minApp = flag("min-app", ENXUTO ? 1 : 3), minWorker = flag("min-worker", ENXUTO ? 1 : 2)
 const util = flag("util", 0.6)
 const scoreAlvo = flag("sysbench-alvo", NaN)
 const fatorHw = Number.isFinite(scoreAlvo) && Number.isFinite(scoreLocal) ? scoreLocal / scoreAlvo : 1
@@ -121,8 +131,12 @@ const nucleos = (servs: string[]) => Object.entries(rpsPico).reduce((s, [cen, rp
 const appCores = nucleos(APP)
 const workerCores = nucleos(["worker", "nats"])
 const dbCores = nucleos(["postgres"])
-const appNos = Math.max(3, Math.ceil(appCores / vcpu))
-const workerNos = Math.max(2, Math.ceil(workerCores / vcpu))
+/* Menor tamanho da escada que leva o pico num só nó; acima de 16 vCPU, mais nós. */
+const tamanho = (cores: number) => ESCADA.find((t) => cores <= t) ?? ESCADA.at(-1)!
+if (!vcpuFixo) vcpu = tamanho(Math.max(appCores, workerCores))
+if (!ram) ram = vcpu * 4
+const appNos = Math.max(minApp, Math.ceil(appCores / vcpu)) * fatorLb
+const workerNos = Math.max(minWorker, Math.ceil(workerCores / vcpu))
 const memApp = Math.max(...APP.map((s) => porBase(lojas, (r) => { const d = referencia("vitrine", r); return d?.memoria_max_mb?.[s] ?? null })))
 const consultasS = Object.entries(rpsPico).reduce((s, [cen, rps]) => s + rps * custo(cen, lojas, (d) => d.banco.consultas_por_req), 0)
 const walS = Object.entries(rpsPico).reduce((s, [cen, rps]) => s + rps * custo(cen, lojas, (d) => d.banco.wal_bytes_por_req ?? 0), 0)
@@ -133,10 +147,15 @@ const catalogoBytes = lojas * (bpl.loja + (produtosLoja - bpl.produtos_por_loja)
 const pedidosBytes = pedidosDia * PREM.retencao_pedidos_dias * bytesPedido
 const dadosBytes = catalogoBytes + pedidosBytes
 const discoDb = dadosBytes * 2.5 // dado + índices já incluídos; ×2,5 = WAL, vacuum, crescimento e folga de 40 %
-const ramDb = Math.max(16, Math.ceil((catalogoBytes + pedidosBytes * 0.1) / 2 ** 30 * 1.3)) // catálogo inteiro + 10 % dos pedidos (quentes) em memória
+/* Fração do catálogo que fica quente na RAM do banco: premissa, não medida (padrão 1 = catálogo inteiro; enxuto 0,25). */
+const fracaoQuente = flag("fracao-quente", ENXUTO ? 0.25 : 1)
+const ramDb = Math.max(ENXUTO ? 4 : 16, Math.ceil((catalogoBytes * fracaoQuente + pedidosBytes * 0.1) / 2 ** 30 * 1.3)) // catálogo inteiro + 10 % dos pedidos (quentes) em memória
 const iopsDb = Math.ceil((walS / 8192) * 3 + consultasS * 0.01) // escrita: páginas de WAL ×3 (WAL + checkpoint + dado); leitura: 1 % de falta de cache
 const conexoes = (appNos * APP.length + workerNos) * PREM.pool_por_instancia
-const DB_NO = { vcpu: 16, ram: 64 } // perfil de referência de DEC-INFRA-001
+const DB_REF = { vcpu: 16, ram: 64 } // perfil de referência de DEC-INFRA-001
+/* Enxuto: o banco também sobe pela escada (vCPU pelo pico, RAM pelo dado quente), até o perfil de referência. */
+const dbVcpu = ENXUTO ? Math.min(DB_REF.vcpu, Math.max(tamanho(dbCores), Math.ceil(ramDb / 8 / 2) * 2, 2)) : DB_REF.vcpu
+const DB_NO = { vcpu: dbVcpu, ram: ENXUTO ? Math.min(DB_REF.ram, Math.max(dbVcpu * 4, ramDb)) : DB_REF.ram }
 const celulas = Math.max(1, Math.ceil(dbCores / DB_NO.vcpu), Math.ceil(ramDb / DB_NO.ram))
 const valkeyMb = porBase(lojas, (r) => referencia("vitrine", r)?.memoria_max_mb?.valkey ?? null)
 
@@ -188,6 +207,7 @@ if (tem("json")) console.log(JSON.stringify(r, null, 2))
 else {
   const R = r.recursos
   console.log(`${lojas} lojas · ${pedidosDia.toLocaleString("pt-BR")} pedidos/dia · pico ×${pico}: ${r.trafego_pico.rps_total} RPS, ${r.trafego_pico.pedidos_por_s} pedidos/s`)
+  if (ENXUTO) console.log(`  política: mínimo ${minApp} nó de app, balanceador ×${fatorLb}; banco ${DB_NO.vcpu} vCPU/${DB_NO.ram} GB por célula`)
   console.log(`  app     ${R.app.nos} nós de ${vcpu} vCPU/${ram} GB (${R.app.vcpu_necessarios} vCPU a ${util * 100}% de uso)`)
   console.log(`  worker  ${R.worker.nos} nós (${R.worker.vcpu_necessarios} vCPU)`)
   console.log(`  banco   ${R.banco.celulas} célula(s) · ${R.banco.vcpu_necessarios} vCPU · ${R.banco.ram_gb_total} GB RAM · ${R.banco.disco_gb_total} GB disco · ${R.banco.iops_pico} IOPS · ${R.banco.conexoes_app} conexões`)
